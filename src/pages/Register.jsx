@@ -53,7 +53,11 @@ export default function Register() {
 
       setSuccess("Conta criada. Confirme o email e depois entre normalmente.");
     } catch (err) {
-      setError(err.message || "Não foi possível criar a conta");
+      if (err.message?.toLowerCase().includes('email rate limit')) {
+        setError('O Supabase bloqueou temporariamente o envio de emails de confirmação. Aguarde alguns minutos e tente novamente.');
+      } else {
+        setError(err.message || "Não foi possível criar a conta");
+      }
     } finally {
       setLoading(false);
     }

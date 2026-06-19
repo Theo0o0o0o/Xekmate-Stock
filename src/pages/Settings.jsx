@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import PageHeader from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Moon, Sun, Globe, Bell, Lock, Palette, Save, Shield } from 'lucide-react';
+import { Moon, Sun, Globe, Lock, Palette, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
 import { updateAccessPassword } from '@/services/appAccessService';
@@ -14,7 +14,6 @@ import { updateAccessPassword } from '@/services/appAccessService';
 export default function Settings() {
   const { t, lang, setLang } = useI18n();
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
-  const [notifications, setNotifications] = useState({ lowStock: true, outOfStock: true });
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -32,27 +31,47 @@ export default function Settings() {
 
   useEffect(() => {
     const saved = localStorage.getItem('theme');
-    if (saved === 'dark') { document.documentElement.classList.add('dark'); setDarkMode(true); }
-    else if (saved === 'light') { document.documentElement.classList.remove('dark'); setDarkMode(false); }
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+      setDarkMode(true);
+    } else if (saved === 'light') {
+      document.documentElement.classList.remove('dark');
+      setDarkMode(false);
+    }
   }, []);
 
-  const handleSaveNotifications = () => {
-    localStorage.setItem('notifications', JSON.stringify(notifications));
-    toast.success(t('settings_pref_guardadas'));
-  };
-
   const handleChangePassword = async () => {
-    if (!newPassword || !confirmPassword) { toast.error(t('settings_pass_erro_campos')); return; }
-    if (newPassword !== confirmPassword) { toast.error(t('settings_pass_erro_match')); return; }
-    if (newPassword.length < 6) { toast.error(t('settings_pass_erro_len')); return; }
-    toast.success(t('settings_pass_sucesso'));
-    setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error(t('settings_pass_erro_campos'));
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error(t('settings_pass_erro_match'));
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error(t('settings_pass_erro_len'));
+      return;
+    }
+
+    try {
+      await updateAccessPassword(currentPassword, newPassword);
+      toast.success('Senha de acesso alterada com sucesso');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      toast.error(error.message || 'Não foi possível alterar a senha de acesso');
+    }
   };
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-5">
       <PageHeader title={t('settings_title')} description={t('settings_desc')} />
-<Card className="shadow-none border-border">
+
+      <Card className="shadow-none border-border">
         <CardHeader className="py-3 px-4 border-b border-border">
           <CardTitle className="text-[13px] font-semibold flex items-center gap-1.5">
             <Palette className="w-3.5 h-3.5 text-primary" />{t('settings_aparencia')}
@@ -72,7 +91,8 @@ export default function Settings() {
           </div>
         </CardContent>
       </Card>
-<Card className="shadow-none border-border">
+
+      <Card className="shadow-none border-border">
         <CardHeader className="py-3 px-4 border-b border-border">
           <CardTitle className="text-[13px] font-semibold flex items-center gap-1.5">
             <Globe className="w-3.5 h-3.5 text-primary" />{t('settings_idioma')}
@@ -96,41 +116,15 @@ export default function Settings() {
           </div>
         </CardContent>
       </Card>
-<Card className="shadow-none border-border">
-        <CardHeader className="py-3 px-4 border-b border-border">
-          <CardTitle className="text-[13px] font-semibold flex items-center gap-1.5">
-            <Bell className="w-3.5 h-3.5 text-primary" />{t('settings_notificacoes')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 py-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-[13px] font-medium">{t('settings_notif_baixo')}</Label>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{t('settings_notif_baixo_desc')}</p>
-            </div>
-            <Switch checked={notifications.lowStock} onCheckedChange={v => setNotifications(n => ({ ...n, lowStock: v }))} />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-[13px] font-medium">{t('settings_notif_esgotado')}</Label>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{t('settings_notif_esgotado_desc')}</p>
-            </div>
-            <Switch checked={notifications.outOfStock} onCheckedChange={v => setNotifications(n => ({ ...n, outOfStock: v }))} />
-          </div>
-          <div className="pt-1 flex justify-end">
-            <Button size="sm" className="h-8 text-xs" onClick={handleSaveNotifications}>
-              <Save className="w-3.5 h-3.5 mr-1" />{t('settings_guardar_pref')}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-<Card className="shadow-none border-border">
+
+      <Card className="shadow-none border-border">
         <CardHeader className="py-3 px-4 border-b border-border">
           <CardTitle className="text-[13px] font-semibold flex items-center gap-1.5">
             <Lock className="w-3.5 h-3.5 text-primary" />{t('settings_seguranca')}
           </CardTitle>
         </CardHeader>
         <CardContent className="px-4 py-4 space-y-3">
+          <p className="text-[11px] text-muted-foreground">Senha pedida antes do login e do registo.</p>
           <div className="space-y-1.5">
             <Label className="text-[12px]">Senha de acesso atual</Label>
             <Input type="password" className="h-8 text-sm" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••" />
