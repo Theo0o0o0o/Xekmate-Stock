@@ -10,7 +10,7 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  const userName = user?.full_name || user?.email?.split('@')[0] || '';
+  const userName = user?.full_name || user?.email || '';
 
   const handleLogout = () => {
     logout();

@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Users as UsersIcon, Pencil, UserPlus, Shield, Trash2, History } from 'lucide-react';
 import { toast } from 'sonner';
 import { userService } from '@/services/userService';
-import { base44 } from '@/api/base44Client';
+import { stockMovementService } from '@/services/stockMovementService';
 import { format } from 'date-fns';
 import { pt, enUS } from 'date-fns/locale';
 import { useI18n } from '@/lib/i18n';
@@ -30,23 +30,13 @@ export default function UsersPage() {
   const [deletingUser, setDeletingUser] = useState(null);
   const [historyUser, setHistoryUser] = useState(null);
 
-  const { data: users = [], isLoading, isError } = useQuery({
-    queryKey: ['users'],
-    queryFn: async () => {
-      const currentUser = await userService.ensureCurrentUserIsAdmin(await userService.me());
-      const list = await userService.list('full_name', 200);
-      if (list.length > 0) {
-        const promoted = await userService.promoteAllToAdmin(list);
-        return promoted.map(userService.withDisplayName);
-      }
-      return currentUser ? [userService.withDisplayName(currentUser)] : [];
-    },
-    retry: 1
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['users'], queryFn: () => userService.list('full_name', 200)
   });
 
   const { data: userMovements = [], isLoading: loadingHistory } = useQuery({
     queryKey: ['user-movements', historyUser?.id],
-    queryFn: () => base44.entities.StockMovement.filter({ userId: historyUser.id }, '-created_date', 50),
+    queryFn: () => stockMovementService.filter({ userId: historyUser.id }, '-created_date', 50),
     enabled: !!historyUser
   });
 
@@ -60,7 +50,7 @@ export default function UsersPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.User.delete(id),
+    mutationFn: (id) => userService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success(t('users_removido'));
@@ -74,9 +64,13 @@ export default function UsersPage() {
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) { toast.error(t('users_email_obrigatorio')); return; }
-    await userService.invite(inviteEmail, 'admin');
-    toast.success(t('users_convite_enviado') + inviteEmail);
-    setShowInvite(false); setInviteEmail('');
+    try {
+      await userService.invite(inviteEmail, 'admin');
+      toast.success(t('users_convite_enviado') + inviteEmail);
+      setShowInvite(false); setInviteEmail('');
+    } catch (err) {
+      toast.error(err.message || 'Envie o link de registo ao utilizador.');
+    }
   };
 
   const movementTypeColor = {
@@ -98,8 +92,6 @@ export default function UsersPage() {
 
       {isLoading ? (
         <div className="space-y-1.5">{[1,2,3].map(i => <Skeleton key={i} className="h-11 rounded" />)}</div>
-      ) : isError ? (
-        <EmptyState icon={UsersIcon} title={t('users_sem')} description="Não foi possível carregar a lista de utilizadores. Termine sessão e entre novamente para atualizar as permissões." />
       ) : users.length === 0 ? (
         <EmptyState icon={UsersIcon} title={t('users_sem')} description={t('users_sem_desc')} />
       ) : (

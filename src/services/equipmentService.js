@@ -1,23 +1,26 @@
-import { base44 } from '@/api/base44Client';
+import { createEntityService } from '@/services/supabaseEntityService';
+
+const equipmentEntity = createEntityService('Equipment');
+
 export const equipmentService = {
   list: (sort = '-created_date', limit = 500) =>
-    base44.entities.Equipment.list(sort, limit),
+    equipmentEntity.list(sort, limit),
 
   filter: (query, sort = '-created_date', limit = 500) =>
-    base44.entities.Equipment.filter(query, sort, limit),
+    equipmentEntity.filter(query, sort, limit),
 
   get: (id) =>
-    base44.entities.Equipment.filter({ id }),
+    equipmentEntity.get(id),
 
   create: (data) =>
-    base44.entities.Equipment.create(data),
+    equipmentEntity.create(data),
 
   update: (id, data) =>
-    base44.entities.Equipment.update(id, data),
+    equipmentEntity.update(id, data),
 
   delete: (id) =>
-    base44.entities.Equipment.delete(id),
+    equipmentEntity.delete(id),
 
   schema: () =>
-    base44.entities.Equipment.schema(),
+    equipmentEntity.schema(),
 };

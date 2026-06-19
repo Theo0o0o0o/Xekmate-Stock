@@ -1,69 +1,69 @@
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/api/supabaseClient';
+import { createEntityService } from '@/services/supabaseEntityService';
 
-const getDisplayNameKey = (email) => `xekmate_display_name_${String(email || '').toLowerCase()}`;
+const userEntity = createEntityService('User');
 
-const hasUsefulName = (name, email) => {
-  if (!name || !email) return Boolean(name);
-  return name.toLowerCase() !== email.split('@')[0].toLowerCase();
+const displayNameFromUser = (authUser) =>
+  authUser?.user_metadata?.full_name ||
+  authUser?.user_metadata?.name ||
+  authUser?.email?.split('@')[0] ||
+  '';
+
+const ensureProfile = async (authUser) => {
+  if (!authUser) return null;
+
+  const existing = await userEntity.filter({ id: authUser.id }, 'full_name', 1);
+  const fallbackProfile = {
+    id: authUser.id,
+    email: authUser.email,
+    full_name: displayNameFromUser(authUser),
+    role: 'admin',
+    active: true,
+  };
+
+  if (existing[0]) {
+    const needsUpdate = existing[0].role !== 'admin' || !existing[0].email || !existing[0].full_name;
+    if (needsUpdate) {
+      return userEntity.update(authUser.id, {
+        email: existing[0].email || fallbackProfile.email,
+        full_name: existing[0].full_name || fallbackProfile.full_name,
+        role: 'admin',
+        active: existing[0].active !== false,
+      });
+    }
+    return { ...existing[0], role: 'admin' };
+  }
+
+  return userEntity.upsert(fallbackProfile);
 };
 
 export const userService = {
   list: (sort = 'full_name', limit = 200) =>
-    base44.entities.User.list(sort, limit),
+    userEntity.list(sort, limit),
 
-  me: () =>
-    base44.auth.me(),
-
-  updateMe: (data) =>
-    base44.auth.updateMe(data),
-
-  saveLocalDisplayName: (email, fullName) => {
-    if (!email || !fullName?.trim()) return;
-    localStorage.setItem(getDisplayNameKey(email), fullName.trim());
+  me: async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return ensureProfile(data.user);
   },
 
-  getLocalDisplayName: (email) =>
-    email ? localStorage.getItem(getDisplayNameKey(email)) : null,
-
-  withDisplayName: (user) => {
-    if (!user) return user;
-    const localName = userService.getLocalDisplayName(user.email);
-    const fullName = hasUsefulName(user.full_name, user.email)
-      ? user.full_name
-      : localName;
-    return { ...user, full_name: fullName || user.full_name };
+  updateMe: async (data) => {
+    const { data: authData, error } = await supabase.auth.updateUser({
+      data: { full_name: data.full_name },
+    });
+    if (error) throw error;
+    return userEntity.update(authData.user.id, data);
   },
 
   update: (id, data) =>
-    base44.entities.User.update(id, data),
+    userEntity.update(id, { ...data, role: 'admin' }),
 
   delete: (id) =>
-    base44.entities.User.delete(id),
+    userEntity.delete(id),
 
-  invite: (email, role = 'admin') =>
-    base44.users.inviteUser(email, role),
-
-  ensureCurrentUserIsAdmin: async (user) => {
-    if (user?.role === 'admin' && user?.active !== false) return user;
-
-    try {
-      return await base44.auth.updateMe({ role: 'admin', active: true });
-    } catch {
-      return user ? { ...user, role: 'admin', active: true } : user;
-    }
+  invite: async () => {
+    throw new Error('Para adicionar utilizadores, envie o link de registo do sistema.');
   },
 
-  promoteAllToAdmin: async (users) => {
-    const updates = users.map(async (user) => {
-      if (user.role === 'admin' && user.active !== false) return user;
-
-      try {
-        return await base44.entities.User.update(user.id, { role: 'admin', active: true });
-      } catch {
-        return { ...user, role: 'admin', active: true };
-      }
-    });
-
-    return Promise.all(updates);
-  },
+  ensureProfile,
 };

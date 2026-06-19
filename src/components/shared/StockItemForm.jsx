@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useUserRole } from '@/lib/useUserRole';
+import { consumableService } from '@/services/consumableService';
+import { locationService } from '@/services/locationService';
+import { partService } from '@/services/partService';
+import { stockMovementService } from '@/services/stockMovementService';
+import { supplierService } from '@/services/supplierService';
 import PageHeader from '@/components/shared/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,12 +26,13 @@ export default function StockItemForm({ item, entityType, typeOptions, onSaved, 
     supplier: '', notes: '', ...item
   });
   const [errors, setErrors] = useState({});
+  const entityService = isConsumable ? consumableService : partService;
 
   const { data: locations = [] } = useQuery({
-    queryKey: ['locations'], queryFn: () => base44.entities.Location.filter({ active: true })
+    queryKey: ['locations'], queryFn: () => locationService.listActive()
   });
   const { data: suppliers = [] } = useQuery({
-    queryKey: ['suppliers'], queryFn: () => base44.entities.Supplier.list()
+    queryKey: ['suppliers'], queryFn: () => supplierService.list()
   });
 
   const validate = () => {
@@ -44,13 +49,12 @@ export default function StockItemForm({ item, entityType, typeOptions, onSaved, 
     e.preventDefault();
     if (!validate()) return;
     setSaving(true);
-    const entity = base44.entities[entityType];
     const data = { ...form, quantity: Number(form.quantity), minimumStock: Number(form.minimumStock), updatedBy: user?.full_name || user?.email };
 
     if (item?.id) {
-      await entity.update(item.id, data);
+      await entityService.update(item.id, data);
       if (Number(item.quantity) !== Number(form.quantity)) {
-        await base44.entities.StockMovement.create({
+        await stockMovementService.create({
           itemType: entityType, itemId: item.id, itemName: form.name,
           movementType: 'Ajuste', previousQuantity: item.quantity, newQuantity: Number(form.quantity),
           quantityChanged: Number(form.quantity) - item.quantity,
@@ -59,8 +63,8 @@ export default function StockItemForm({ item, entityType, typeOptions, onSaved, 
       }
       toast.success(`${isConsumable ? 'Consumível' : 'Peça'} atualizado(a)`);
     } else {
-      const created = await entity.create(data);
-      await base44.entities.StockMovement.create({
+      const created = await entityService.create(data);
+      await stockMovementService.create({
         itemType: entityType, itemId: created.id, itemName: form.name,
         movementType: 'Entrada', newQuantity: Number(form.quantity), quantityChanged: Number(form.quantity),
         reason: `Novo(a) ${isConsumable ? 'consumível' : 'peça'} registado(a)`,

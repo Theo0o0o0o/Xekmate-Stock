@@ -1,0 +1,203 @@
+create extension if not exists pgcrypto;
+
+create or replace function public.touch_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  full_name text,
+  role text not null default 'admin',
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.equipment (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  brand text not null,
+  serial_number text not null,
+  category text not null,
+  status text not null default 'Disponível',
+  location text,
+  entry_date date,
+  client_name text,
+  supplier text,
+  purchase_date date,
+  warranty_end_date date,
+  notes text,
+  image text,
+  updated_by text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.consumables (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  reference_code text not null,
+  brand text,
+  type text,
+  compatible_models text,
+  quantity numeric not null default 0,
+  minimum_stock numeric not null default 0,
+  location text,
+  supplier text,
+  notes text,
+  image text,
+  updated_by text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.parts (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  reference_code text not null,
+  compatible_models text,
+  quantity numeric not null default 0,
+  minimum_stock numeric not null default 0,
+  location text,
+  supplier text,
+  notes text,
+  image text,
+  updated_by text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.locations (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  description text,
+  type text not null,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.suppliers (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  contact_name text,
+  phone text,
+  email text,
+  address text,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.stock_movements (
+  id uuid primary key default gen_random_uuid(),
+  item_type text not null,
+  item_id text,
+  item_name text not null,
+  movement_type text not null,
+  previous_quantity numeric,
+  new_quantity numeric,
+  quantity_changed numeric,
+  previous_status text,
+  new_status text,
+  reason text,
+  user_id text,
+  user_name text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, full_name, role, active)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    'admin',
+    true
+  )
+  on conflict (id) do update
+  set
+    email = excluded.email,
+    full_name = coalesce(public.profiles.full_name, excluded.full_name),
+    role = 'admin',
+    active = true,
+    updated_at = now();
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function public.handle_new_user();
+
+do $$
+declare
+  table_name text;
+begin
+  foreach table_name in array array[
+    'profiles',
+    'equipment',
+    'consumables',
+    'parts',
+    'locations',
+    'suppliers',
+    'stock_movements'
+  ] loop
+    execute format('alter table public.%I enable row level security', table_name);
+
+    execute format('drop policy if exists authenticated_read_all on public.%I', table_name);
+    execute format('drop policy if exists authenticated_insert_all on public.%I', table_name);
+    execute format('drop policy if exists authenticated_update_all on public.%I', table_name);
+    execute format('drop policy if exists authenticated_delete_all on public.%I', table_name);
+
+    execute format('create policy authenticated_read_all on public.%I for select to authenticated using (true)', table_name);
+    execute format('create policy authenticated_insert_all on public.%I for insert to authenticated with check (true)', table_name);
+    execute format('create policy authenticated_update_all on public.%I for update to authenticated using (true) with check (true)', table_name);
+    execute format('create policy authenticated_delete_all on public.%I for delete to authenticated using (true)', table_name);
+  end loop;
+end;
+$$;
+
+drop trigger if exists profiles_touch_updated_at on public.profiles;
+create trigger profiles_touch_updated_at before update on public.profiles
+for each row execute function public.touch_updated_at();
+
+drop trigger if exists equipment_touch_updated_at on public.equipment;
+create trigger equipment_touch_updated_at before update on public.equipment
+for each row execute function public.touch_updated_at();
+
+drop trigger if exists consumables_touch_updated_at on public.consumables;
+create trigger consumables_touch_updated_at before update on public.consumables
+for each row execute function public.touch_updated_at();
+
+drop trigger if exists parts_touch_updated_at on public.parts;
+create trigger parts_touch_updated_at before update on public.parts
+for each row execute function public.touch_updated_at();
+
+drop trigger if exists locations_touch_updated_at on public.locations;
+create trigger locations_touch_updated_at before update on public.locations
+for each row execute function public.touch_updated_at();
+
+drop trigger if exists suppliers_touch_updated_at on public.suppliers;
+create trigger suppliers_touch_updated_at before update on public.suppliers
+for each row execute function public.touch_updated_at();
+
+drop trigger if exists stock_movements_touch_updated_at on public.stock_movements;
+create trigger stock_movements_touch_updated_at before update on public.stock_movements
+for each row execute function public.touch_updated_at();

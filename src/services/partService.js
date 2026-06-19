@@ -1,20 +1,23 @@
-import { base44 } from '@/api/base44Client';
+import { createEntityService } from '@/services/supabaseEntityService';
+
+const partEntity = createEntityService('Part');
+
 export const partService = {
   list: (sort = '-created_date', limit = 500) =>
-    base44.entities.Part.list(sort, limit),
+    partEntity.list(sort, limit),
 
   filter: (query, sort = '-created_date', limit = 500) =>
-    base44.entities.Part.filter(query, sort, limit),
+    partEntity.filter(query, sort, limit),
 
   create: (data) =>
-    base44.entities.Part.create(data),
+    partEntity.create(data),
 
   update: (id, data) =>
-    base44.entities.Part.update(id, data),
+    partEntity.update(id, data),
 
   delete: (id) =>
-    base44.entities.Part.delete(id),
+    partEntity.delete(id),
 
   schema: () =>
-    base44.entities.Part.schema(),
+    partEntity.schema(),
 };

@@ -1,7 +1,8 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { equipmentService } from '@/services/equipmentService';
+import { stockMovementService } from '@/services/stockMovementService';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,15 +18,12 @@ export default function EquipmentDetail() {
 
   const { data: eq, isLoading } = useQuery({
     queryKey: ['equipment', id],
-    queryFn: async () => {
-      const list = await base44.entities.Equipment.filter({ id });
-      return list[0];
-    }
+    queryFn: () => equipmentService.get(id)
   });
 
   const { data: movements = [] } = useQuery({
     queryKey: ['movements', 'equipment', id],
-    queryFn: () => base44.entities.StockMovement.filter({ itemId: id }, '-created_date', 50),
+    queryFn: () => stockMovementService.filter({ itemId: id }, '-created_date', 50),
     enabled: !!id
   });
 

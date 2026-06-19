@@ -1,67 +1,62 @@
-import React, { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+﻿import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Loader2, AlertTriangle } from "lucide-react";
+import { Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 
 export default function ResetPassword() {
-  const [searchParams] = useSearchParams();
-  const resetToken = searchParams.get("token");
-
+  const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
+
     if (newPassword !== confirmPassword) {
       setError("As palavras-passe não coincidem");
       return;
     }
+
     setLoading(true);
     try {
-      await base44.auth.resetPassword({ resetToken, newPassword });
-      window.location.href = "/login";
+      const { error: resetError } = await supabase.auth.updateUser({ password: newPassword });
+      if (resetError) throw resetError;
+      setSuccess("Palavra-passe redefinida com sucesso.");
+      setTimeout(() => navigate("/login"), 800);
     } catch (err) {
-      setError(err.message || "Failed to reset password");
+      setError(err.message || "Não foi possível redefinir a palavra-passe");
     } finally {
       setLoading(false);
     }
   };
-
-  if (!resetToken) {
-    return (
-      <AuthLayout
-        icon={AlertTriangle}
-        title="Link inválido"
-        subtitle="Este link de redefinição é inválido ou expirou"
-        footer={
-          <Link to="/forgot-password" className="text-primary font-medium hover:underline">
-            Solicitar novo link
-          </Link>
-        }
-      >
-        <p className="text-sm text-foreground text-center">
-          O link utilizado parece estar incompleto. Solicite um novo email de redefinição.
-        </p>
-      </AuthLayout>
-    );
-  }
 
   return (
     <AuthLayout
       icon={Lock}
       title="Nova palavra-passe"
       subtitle="Introduza a sua nova palavra-passe"
+      footer={
+        <Link to="/login" className="text-primary font-medium hover:underline">
+          Voltar ao login
+        </Link>
+      }
     >
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
           {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-4 p-3 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm">
+          {success}
         </div>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">

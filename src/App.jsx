@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { I18nProvider } from '@/lib/i18n';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import xLogo from '@/assets/x-logo.png';
 
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -35,7 +36,7 @@ const AuthenticatedApp = () => {
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <img
-            src="https://media.base44.com/images/public/6a2bdc002e5217b821d26917/88fe634a9_X.png"
+            src={xLogo}
             alt="Xekmate"
             className="w-14 h-14 object-contain"
           />

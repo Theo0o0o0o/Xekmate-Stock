@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useUserRole } from '@/lib/useUserRole';
+import { equipmentService } from '@/services/equipmentService';
+import { locationService } from '@/services/locationService';
+import { stockMovementService } from '@/services/stockMovementService';
+import { supplierService } from '@/services/supplierService';
 import PageHeader from '@/components/shared/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,10 +29,10 @@ export default function EquipmentForm({ item, onSaved, onCancel }) {
   const [errors, setErrors] = useState({});
 
   const { data: locations = [] } = useQuery({
-    queryKey: ['locations'], queryFn: () => base44.entities.Location.filter({ active: true })
+    queryKey: ['locations'], queryFn: () => locationService.listActive()
   });
   const { data: suppliers = [] } = useQuery({
-    queryKey: ['suppliers'], queryFn: () => base44.entities.Supplier.list()
+    queryKey: ['suppliers'], queryFn: () => supplierService.list()
   });
 
   const validate = () => {
@@ -48,9 +51,9 @@ export default function EquipmentForm({ item, onSaved, onCancel }) {
     const data = { ...form, updatedBy: user?.full_name || user?.email };
 
     if (item?.id) {
-      await base44.entities.Equipment.update(item.id, data);
+      await equipmentService.update(item.id, data);
       if (item.status !== form.status) {
-        await base44.entities.StockMovement.create({
+        await stockMovementService.create({
           itemType: 'Equipment', itemId: item.id, itemName: form.name,
           movementType: 'Edição', previousStatus: item.status, newStatus: form.status,
           reason: `Estado alterado de "${item.status}" para "${form.status}"`,
@@ -59,8 +62,8 @@ export default function EquipmentForm({ item, onSaved, onCancel }) {
       }
       toast.success('Equipamento atualizado');
     } else {
-      const created = await base44.entities.Equipment.create(data);
-      await base44.entities.StockMovement.create({
+      const created = await equipmentService.create(data);
+      await stockMovementService.create({
         itemType: 'Equipment', itemId: created.id, itemName: form.name,
         movementType: 'Entrada', newStatus: form.status,
         reason: 'Novo equipamento registado',

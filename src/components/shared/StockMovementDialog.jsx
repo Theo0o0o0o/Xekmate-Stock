@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useUserRole } from '@/lib/useUserRole';
+import { consumableService } from '@/services/consumableService';
+import { partService } from '@/services/partService';
+import { stockMovementService } from '@/services/stockMovementService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +13,7 @@ import { toast } from 'sonner';
 
 export default function StockMovementDialog({ open, onOpenChange, item, entityType, onComplete }) {
   const { user } = useUserRole();
+  const entityService = entityType === 'Consumable' ? consumableService : partService;
   const [type, setType] = useState('Entrada');
   const [qty, setQty] = useState(1);
   const [reason, setReason] = useState('');
@@ -32,8 +35,8 @@ export default function StockMovementDialog({ open, onOpenChange, item, entityTy
     }
 
     setSaving(true);
-    await base44.entities[entityType].update(item.id, { quantity: newQty, updatedBy: user?.full_name || user?.email });
-    await base44.entities.StockMovement.create({
+    await entityService.update(item.id, { quantity: newQty, updatedBy: user?.full_name || user?.email });
+    await stockMovementService.create({
       itemType: entityType, itemId: item.id, itemName: item.name,
       movementType: type, previousQuantity: currentQty, newQuantity: newQty,
       quantityChanged: type === 'Ajuste' ? newQty - currentQty : (type === 'Entrada' ? Number(qty) : -Number(qty)),
