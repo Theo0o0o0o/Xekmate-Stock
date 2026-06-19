@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Moon, Sun, Globe, Bell, Lock, Palette, Save, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n';
+import { updateAccessPassword } from '@/services/appAccessService';
 
 export default function Settings() {
   const { t, lang, setLang } = useI18n();
@@ -131,20 +132,20 @@ export default function Settings() {
         </CardHeader>
         <CardContent className="px-4 py-4 space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-[12px]">{t('settings_pass_atual')}</Label>
+            <Label className="text-[12px]">Senha de acesso atual</Label>
             <Input type="password" className="h-8 text-sm" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-[12px]">{t('settings_nova_pass')}</Label>
+            <Label className="text-[12px]">Nova senha de acesso</Label>
             <Input type="password" className="h-8 text-sm" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-[12px]">{t('settings_confirmar_pass')}</Label>
+            <Label className="text-[12px]">Confirmar nova senha de acesso</Label>
             <Input type="password" className="h-8 text-sm" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" />
           </div>
           <div className="flex justify-end pt-1">
             <Button size="sm" className="h-8 text-xs" onClick={handleChangePassword}>
-              <Shield className="w-3.5 h-3.5 mr-1" />{t('settings_alterar_pass')}
+              <Shield className="w-3.5 h-3.5 mr-1" />Alterar senha de acesso
             </Button>
           </div>
         </CardContent>

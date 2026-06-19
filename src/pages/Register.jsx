@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/api/supabaseClient";
 import { userService } from "@/services/userService";
@@ -59,6 +59,25 @@ export default function Register() {
     }
   };
 
+  if (success) {
+    return (
+      <AuthLayout
+        icon={Mail}
+        title="Verificar email"
+        subtitle={null}
+        footer={
+          <Link to="/login" className="text-primary font-medium hover:underline">
+            Voltar ao login
+          </Link>
+        }
+      >
+        <div className="p-4 rounded-lg bg-destructive/10 text-destructive border border-destructive/30 text-sm">
+          {success}
+        </div>
+      </AuthLayout>
+    );
+  }
+
   return (
     <AuthLayout
       icon={UserPlus}
@@ -76,11 +95,6 @@ export default function Register() {
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
           {error}
-        </div>
-      )}
-      {success && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm">
-          {success}
         </div>
       )}
 

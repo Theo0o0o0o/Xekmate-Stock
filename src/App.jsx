@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { I18nProvider } from '@/lib/i18n';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import AccessGate from '@/components/AccessGate';
 import xLogo from '@/assets/x-logo.png';
 
 import Login from '@/pages/Login';
@@ -89,7 +90,9 @@ function App() {
       <AuthProvider>
         <QueryClientProvider client={queryClientInstance}>
           <Router>
-            <AuthenticatedApp />
+            <AccessGate>
+              <AuthenticatedApp />
+            </AccessGate>
           </Router>
           <Toaster />
           <SonnerToaster position="top-right" richColors />
