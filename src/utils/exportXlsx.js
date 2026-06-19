@@ -142,7 +142,7 @@ export function exportTudo({ equipment, consumables, parts, movements, locations
   ];
 
   const resumoData = [
-    ['Aplicação', 'Xekmate Stock'],
+    ['Aplicação', 'XEKmate Stock'],
     ['Data/Hora de Exportação', now],
     ['', ''],
     ['Total de Equipamentos', equipment.length],

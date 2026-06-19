@@ -23,8 +23,8 @@ const MovementDot = ({ type }) => {
     'Entrada': 'bg-emerald-500',
     'Saída': 'bg-red-500',
     'Ajuste': 'bg-blue-500',
-    'Manutenção': 'bg-amber-500',
-    'Reserva': 'bg-orange-500',
+    'Manutenção': 'bg-red-500',
+    'Reserva': 'bg-red-500',
     'Venda': 'bg-indigo-500',
     'Edição': 'bg-slate-400',
   }[type] || 'bg-slate-400';
@@ -207,10 +207,10 @@ export default function Dashboard() {
 {(lowStockItems.length > 0 || outOfStockItems.length > 0) && (
         <div className="grid lg:grid-cols-2 gap-4">
           {lowStockItems.length > 0 && (
-            <Card className="shadow-none border-amber-200">
-              <CardHeader className="py-3 px-4 border-b border-amber-100">
+            <Card className="shadow-none border-red-200">
+              <CardHeader className="py-3 px-4 border-b border-red-100">
                 <CardTitle className="text-[13px] font-semibold flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-primary" />
                   {t('stock_baixo')}
                   <span className="ml-auto text-[11px] font-normal text-muted-foreground">{lowStockItems.length} {t('items_suffix')}</span>
                 </CardTitle>
@@ -223,7 +223,7 @@ export default function Dashboard() {
                         <p className="text-[13px] font-medium truncate">{item.name}</p>
                         <p className="text-[11px] text-muted-foreground">{item._type} · {item.referenceCode}</p>
                       </div>
-                      <span className="text-[12px] font-bold text-amber-600 ml-3 shrink-0">{item.quantity}/{item.minimumStock}</span>
+                      <span className="text-[12px] font-bold text-primary ml-3 shrink-0">{item.quantity}/{item.minimumStock}</span>
                     </div>
                   ))}
                 </div>

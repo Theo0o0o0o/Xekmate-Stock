@@ -1,4 +1,4 @@
-﻿# Xekmate Stock
+# XEKmate Stock
 
 Aplicacao React/Vite para gestao de stock de equipamentos, consumiveis, pecas, localizacoes, fornecedores, utilizadores e movimentos.
 

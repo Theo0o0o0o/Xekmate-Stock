@@ -18,7 +18,7 @@ export default function Header({ userName, onMenuToggle, onLogout }) {
         >
           <Menu className="w-5 h-5" />
         </button>
-        <img src={xekmateLogo} alt="Xekmate" className="h-10 w-auto object-contain" />
+        <img src={xekmateLogo} alt="XEKmate" className="h-10 w-auto object-contain" />
       </div>
 
       <div className="flex items-center gap-2 ml-auto">

@@ -75,7 +75,7 @@ export default function UsersPage() {
 
   const movementTypeColor = {
     'Entrada': 'bg-emerald-500', 'Saída': 'bg-red-500', 'Ajuste': 'bg-blue-500',
-    'Manutenção': 'bg-amber-500', 'Reserva': 'bg-orange-500', 'Venda': 'bg-indigo-500', 'Edição': 'bg-slate-400'
+    'Manutenção': 'bg-red-500', 'Reserva': 'bg-red-500', 'Venda': 'bg-indigo-500', 'Edição': 'bg-slate-400'
   };
 
   return (

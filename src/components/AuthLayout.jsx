@@ -10,7 +10,7 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center mb-4">
-            <img src={xekmateLogo} alt="Xekmate" className="w-64 max-w-full h-auto object-contain" />
+            <img src={xekmateLogo} alt="XEKmate" className="w-64 max-w-full h-auto object-contain" />
           </div>
           {title && <h1 className="text-3xl font-bold tracking-tight text-[#000000]">{title}</h1>}
           {subtitle && <p className="mt-2 text-[#000000]">{subtitle}</p>}

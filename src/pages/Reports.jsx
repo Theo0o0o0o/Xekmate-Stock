@@ -173,10 +173,10 @@ export default function Reports() {
       </div>
 
       {lowStockItems.length > 0 && (
-        <Card className="shadow-none border-amber-200">
-          <CardHeader className="py-3 px-4 border-b border-amber-100">
+        <Card className="shadow-none border-red-200">
+          <CardHeader className="py-3 px-4 border-b border-red-100">
             <CardTitle className="text-[13px] font-semibold flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+              <AlertTriangle className="w-3.5 h-3.5 text-primary" />
               {t('reports_stock_baixo')}
               <span className="ml-auto text-[11px] font-normal text-muted-foreground">{lowStockItems.length} {t('items_suffix')}</span>
             </CardTitle>
@@ -198,7 +198,7 @@ export default function Reports() {
                     <TableCell className="font-medium text-[13px] py-2.5">{item.name}</TableCell>
                     <TableCell className="text-[12px] text-muted-foreground py-2.5">{item._type}</TableCell>
                     <TableCell className="font-mono text-[11px] text-muted-foreground py-2.5">{item.referenceCode}</TableCell>
-                    <TableCell className="text-center font-bold text-amber-600 text-[13px] py-2.5">{item.quantity}</TableCell>
+                    <TableCell className="text-center font-bold text-primary text-[13px] py-2.5">{item.quantity}</TableCell>
                     <TableCell className="text-center text-[13px] text-muted-foreground py-2.5">{item.minimumStock}</TableCell>
                   </TableRow>
                 ))}

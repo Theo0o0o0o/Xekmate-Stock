@@ -38,7 +38,7 @@ const AuthenticatedApp = () => {
         <div className="flex flex-col items-center gap-3">
           <img
             src={xLogo}
-            alt="Xekmate"
+            alt="XEKmate"
             className="w-14 h-14 object-contain"
           />
           <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin"></div>
@@ -95,7 +95,18 @@ function App() {
             </AccessGate>
           </Router>
           <Toaster />
-          <SonnerToaster position="top-right" richColors />
+                    <SonnerToaster
+            position="top-right"
+            toastOptions={{
+              classNames: {
+                toast: 'border-red-200 bg-red-50 text-red-700',
+                success: 'border-red-200 bg-red-50 text-red-700',
+                error: 'border-red-200 bg-red-50 text-red-700',
+                info: 'border-red-200 bg-red-50 text-red-700',
+                warning: 'border-red-200 bg-red-50 text-red-700',
+              },
+            }}
+          />
         </QueryClientProvider>
       </AuthProvider>
     </I18nProvider>
