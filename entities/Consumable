@@ -1,0 +1,68 @@
+{
+  "name": "Consumable",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do consum\u00edvel"
+    },
+    "referenceCode": {
+      "type": "string",
+      "description": "C\u00f3digo de refer\u00eancia"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Marca"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Toner",
+        "Tinta",
+        "Cartucho",
+        "Tambor",
+        "Fusor",
+        "Outro"
+      ],
+      "description": "Tipo de consum\u00edvel"
+    },
+    "compatibleModels": {
+      "type": "string",
+      "description": "Modelos compat\u00edveis"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Quantidade atual"
+    },
+    "minimumStock": {
+      "type": "number",
+      "description": "Stock m\u00ednimo"
+    },
+    "location": {
+      "type": "string",
+      "description": "Localiza\u00e7\u00e3o"
+    },
+    "supplier": {
+      "type": "string",
+      "description": "Fornecedor"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es"
+    },
+    "image": {
+      "type": "string",
+      "description": "URL da imagem"
+    },
+    "updatedBy": {
+      "type": "string",
+      "description": "\u00daltimo utilizador que alterou"
+    }
+  },
+  "required": [
+    "name",
+    "referenceCode",
+    "quantity",
+    "minimumStock"
+  ]
+}

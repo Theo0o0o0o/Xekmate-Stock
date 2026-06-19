@@ -1,0 +1,52 @@
+{
+  "name": "Part",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome da pe\u00e7a"
+    },
+    "referenceCode": {
+      "type": "string",
+      "description": "C\u00f3digo de refer\u00eancia"
+    },
+    "compatibleModels": {
+      "type": "string",
+      "description": "Modelos compat\u00edveis"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Quantidade atual"
+    },
+    "minimumStock": {
+      "type": "number",
+      "description": "Stock m\u00ednimo"
+    },
+    "location": {
+      "type": "string",
+      "description": "Localiza\u00e7\u00e3o"
+    },
+    "supplier": {
+      "type": "string",
+      "description": "Fornecedor"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es"
+    },
+    "image": {
+      "type": "string",
+      "description": "URL da imagem"
+    },
+    "updatedBy": {
+      "type": "string",
+      "description": "\u00daltimo utilizador que alterou"
+    }
+  },
+  "required": [
+    "name",
+    "referenceCode",
+    "quantity",
+    "minimumStock"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "Location",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome da localiza\u00e7\u00e3o"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Armaz\u00e9m",
+        "Prateleira",
+        "Sala",
+        "Oficina",
+        "Cliente",
+        "Outro"
+      ],
+      "description": "Tipo de localiza\u00e7\u00e3o"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Localiza\u00e7\u00e3o ativa"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}

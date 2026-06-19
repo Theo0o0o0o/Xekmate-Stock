@@ -1,0 +1,22 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user",
+        "employee"
+      ],
+      "default": "admin",
+      "description": "Papel do utilizador"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Utilizador ativo"
+    }
+  },
+  "required": []
+}

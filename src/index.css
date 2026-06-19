@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+--xk-red: #D71920;
+    --xk-red-dark: #A80F16;
+    --xk-black: #111111;
+    --xk-gray-900: #181A1F;
+    --xk-gray-800: #2B2B2B;
+    --xk-gray-600: #6B7280;
+    --xk-gray-100: #F3F4F6;
+
+    --background: 220 14% 95%;
+    --foreground: 220 15% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 10%;
+    --primary: 356 78% 47%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 12% 90%;
+    --secondary-foreground: 220 15% 20%;
+    --muted: 220 12% 93%;
+    --muted-foreground: 220 8% 46%;
+    --accent: 220 12% 90%;
+    --accent-foreground: 220 15% 15%;
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 10% 86%;
+    --input: 220 10% 86%;
+    --ring: 356 78% 47%;
+    --radius: 0.375rem;
+--chart-1: 356 78% 47%;
+    --chart-2: 220 14% 30%;
+    --chart-3: 356 60% 62%;
+    --chart-4: 220 10% 50%;
+    --chart-5: 220 10% 70%;
+--font-heading: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+--sidebar-background: 222 20% 9%;
+    --sidebar-foreground: 220 12% 88%;
+    --sidebar-primary: 356 78% 47%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 18% 14%;
+    --sidebar-accent-foreground: 220 12% 88%;
+    --sidebar-border: 222 15% 14%;
+    --sidebar-ring: 356 78% 47%;
+  }
+
+  .dark {
+    --background: 222 18% 7%;
+    --foreground: 220 12% 94%;
+    --card: 222 16% 10%;
+    --card-foreground: 220 12% 94%;
+    --popover: 222 16% 10%;
+    --popover-foreground: 220 12% 94%;
+    --primary: 356 75% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 14% 16%;
+    --secondary-foreground: 220 12% 90%;
+    --muted: 222 14% 16%;
+    --muted-foreground: 220 8% 58%;
+    --accent: 222 14% 16%;
+    --accent-foreground: 220 12% 90%;
+    --destructive: 0 62% 44%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 14% 18%;
+    --input: 222 14% 18%;
+    --ring: 356 75% 53%;
+    --chart-1: 356 75% 53%;
+    --chart-2: 220 14% 40%;
+    --chart-3: 356 60% 65%;
+    --chart-4: 220 10% 55%;
+    --chart-5: 220 10% 72%;
+    --sidebar-background: 222 20% 6%;
+    --sidebar-foreground: 220 12% 88%;
+    --sidebar-primary: 356 75% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 18% 11%;
+    --sidebar-accent-foreground: 220 12% 88%;
+    --sidebar-border: 222 15% 12%;
+    --sidebar-ring: 356 75% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-body;
+    font-size: 14px;
+  }
+}
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(220 10% 80%);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(220 10% 65%);
+}
+.xk-table th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(var(--muted-foreground));
+}
