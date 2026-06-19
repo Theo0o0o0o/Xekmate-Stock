@@ -32,7 +32,7 @@ export default function Login() {
   return (
     <AuthLayout
       icon={LogIn}
-      title="Xekmate Stock"
+      title={null}
       subtitle="Sistema interno de gestão de stock"
       footer={
         <>
