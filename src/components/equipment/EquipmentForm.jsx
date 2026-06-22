@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useUserRole } from '@/lib/useUserRole';
 import { equipmentService } from '@/services/equipmentService';
@@ -48,31 +48,36 @@ export default function EquipmentForm({ item, onSaved, onCancel }) {
     e.preventDefault();
     if (!validate()) return;
     setSaving(true);
-    const data = { ...form, updatedBy: user?.full_name || user?.email };
+    try {
+      const data = { ...form, updatedBy: user?.full_name || user?.email };
 
-    if (item?.id) {
-      await equipmentService.update(item.id, data);
-      if (item.status !== form.status) {
+      if (item?.id) {
+        await equipmentService.update(item.id, data);
+        if (item.status !== form.status) {
+          await stockMovementService.create({
+            itemType: 'Equipment', itemId: item.id, itemName: form.name,
+            movementType: 'Edição', previousStatus: item.status, newStatus: form.status,
+            reason: `Estado alterado de "${item.status}" para "${form.status}"`,
+            userId: user?.id, userName: user?.full_name || user?.email
+          });
+        }
+        toast.success('Equipamento atualizado');
+      } else {
+        const created = await equipmentService.create(data);
         await stockMovementService.create({
-          itemType: 'Equipment', itemId: item.id, itemName: form.name,
-          movementType: 'Edição', previousStatus: item.status, newStatus: form.status,
-          reason: `Estado alterado de "${item.status}" para "${form.status}"`,
+          itemType: 'Equipment', itemId: created.id, itemName: form.name,
+          movementType: 'Entrada', newStatus: form.status,
+          reason: 'Novo equipamento registado',
           userId: user?.id, userName: user?.full_name || user?.email
         });
+        toast.success('Equipamento criado');
       }
-      toast.success('Equipamento atualizado');
-    } else {
-      const created = await equipmentService.create(data);
-      await stockMovementService.create({
-        itemType: 'Equipment', itemId: created.id, itemName: form.name,
-        movementType: 'Entrada', newStatus: form.status,
-        reason: 'Novo equipamento registado',
-        userId: user?.id, userName: user?.full_name || user?.email
-      });
-      toast.success('Equipamento criado');
+      onSaved();
+    } catch (error) {
+      toast.error(error.message || 'Não foi possível guardar o equipamento');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    onSaved();
   };
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));

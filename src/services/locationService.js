@@ -1,6 +1,12 @@
 import { createEntityService } from '@/services/supabaseEntityService';
+import { cleanObjectStrings, requireText } from '@/utils/validation';
 
 const locationEntity = createEntityService('Location');
+
+const validateLocation = (data) => {
+  requireText(data.name, 'Nome da localização é obrigatório');
+  requireText(data.type, 'Tipo da localização é obrigatório');
+};
 
 export const locationService = {
   list: (sort = 'name', limit = 200) =>
@@ -9,11 +15,17 @@ export const locationService = {
   listActive: () =>
     locationEntity.filter({ active: true }, 'name', 200),
 
-  create: (data) =>
-    locationEntity.create(data),
+  create: (data) => {
+    const cleaned = cleanObjectStrings(data);
+    validateLocation(cleaned);
+    return locationEntity.create(cleaned);
+  },
 
-  update: (id, data) =>
-    locationEntity.update(id, data),
+  update: (id, data) => {
+    const cleaned = cleanObjectStrings(data);
+    validateLocation(cleaned);
+    return locationEntity.update(id, cleaned);
+  },
 
   delete: (id) =>
     locationEntity.delete(id),

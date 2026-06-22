@@ -114,6 +114,48 @@ create table if not exists public.stock_movements (
   updated_at timestamptz not null default now()
 );
 
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'equipment_serial_number_not_blank') then
+    alter table public.equipment
+      add constraint equipment_serial_number_not_blank check (btrim(serial_number) <> '');
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'consumables_quantity_nonnegative') then
+    alter table public.consumables
+      add constraint consumables_quantity_nonnegative check (quantity >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'consumables_minimum_stock_nonnegative') then
+    alter table public.consumables
+      add constraint consumables_minimum_stock_nonnegative check (minimum_stock >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'parts_quantity_nonnegative') then
+    alter table public.parts
+      add constraint parts_quantity_nonnegative check (quantity >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'parts_minimum_stock_nonnegative') then
+    alter table public.parts
+      add constraint parts_minimum_stock_nonnegative check (minimum_stock >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'stock_movements_previous_quantity_nonnegative') then
+    alter table public.stock_movements
+      add constraint stock_movements_previous_quantity_nonnegative check (previous_quantity is null or previous_quantity >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'stock_movements_new_quantity_nonnegative') then
+    alter table public.stock_movements
+      add constraint stock_movements_new_quantity_nonnegative check (new_quantity is null or new_quantity >= 0);
+  end if;
+end;
+$$;
+
+create unique index if not exists equipment_serial_number_unique_idx
+on public.equipment (lower(serial_number));
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql

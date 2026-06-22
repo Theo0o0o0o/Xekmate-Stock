@@ -18,6 +18,15 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(true);
       setAuthError(null);
       const currentUser = await userService.me();
+      if (currentUser && currentUser.active === false) {
+        setUser(null);
+        setIsAuthenticated(false);
+        setAuthError({
+          type: 'inactive_user',
+          message: 'Utilizador inativo'
+        });
+        return;
+      }
       setUser(currentUser);
       setIsAuthenticated(!!currentUser);
     } catch (error) {

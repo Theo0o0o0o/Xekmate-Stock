@@ -49,31 +49,36 @@ export default function StockItemForm({ item, entityType, typeOptions, onSaved, 
     e.preventDefault();
     if (!validate()) return;
     setSaving(true);
-    const data = { ...form, quantity: Number(form.quantity), minimumStock: Number(form.minimumStock), updatedBy: user?.full_name || user?.email };
+    try {
+      const data = { ...form, quantity: Number(form.quantity), minimumStock: Number(form.minimumStock), updatedBy: user?.full_name || user?.email };
 
-    if (item?.id) {
-      await entityService.update(item.id, data);
-      if (Number(item.quantity) !== Number(form.quantity)) {
+      if (item?.id) {
+        await entityService.update(item.id, data);
+        if (Number(item.quantity) !== Number(form.quantity)) {
+          await stockMovementService.create({
+            itemType: entityType, itemId: item.id, itemName: form.name,
+            movementType: 'Ajuste', previousQuantity: item.quantity, newQuantity: Number(form.quantity),
+            quantityChanged: Number(form.quantity) - item.quantity,
+            reason: 'Ajuste via edição', userId: user?.id, userName: user?.full_name || user?.email
+          });
+        }
+        toast.success(`${isConsumable ? 'Consumível' : 'Peça'} atualizado(a)`);
+      } else {
+        const created = await entityService.create(data);
         await stockMovementService.create({
-          itemType: entityType, itemId: item.id, itemName: form.name,
-          movementType: 'Ajuste', previousQuantity: item.quantity, newQuantity: Number(form.quantity),
-          quantityChanged: Number(form.quantity) - item.quantity,
-          reason: 'Ajuste via edição', userId: user?.id, userName: user?.full_name || user?.email
+          itemType: entityType, itemId: created.id, itemName: form.name,
+          movementType: 'Entrada', newQuantity: Number(form.quantity), quantityChanged: Number(form.quantity),
+          reason: `Novo(a) ${isConsumable ? 'consumível' : 'peça'} registado(a)`,
+          userId: user?.id, userName: user?.full_name || user?.email
         });
+        toast.success(`${isConsumable ? 'Consumível' : 'Peça'} criado(a)`);
       }
-      toast.success(`${isConsumable ? 'Consumível' : 'Peça'} atualizado(a)`);
-    } else {
-      const created = await entityService.create(data);
-      await stockMovementService.create({
-        itemType: entityType, itemId: created.id, itemName: form.name,
-        movementType: 'Entrada', newQuantity: Number(form.quantity), quantityChanged: Number(form.quantity),
-        reason: `Novo(a) ${isConsumable ? 'consumível' : 'peça'} registado(a)`,
-        userId: user?.id, userName: user?.full_name || user?.email
-      });
-      toast.success(`${isConsumable ? 'Consumível' : 'Peça'} criado(a)`);
+      onSaved();
+    } catch (error) {
+      toast.error(error.message || 'Não foi possível guardar o item');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    onSaved();
   };
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));

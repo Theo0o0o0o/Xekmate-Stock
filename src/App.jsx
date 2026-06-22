@@ -95,7 +95,7 @@ function App() {
             </AccessGate>
           </Router>
           <Toaster />
-                    <SonnerToaster
+          <SonnerToaster
             position="top-right"
             toastOptions={{
               classNames: {

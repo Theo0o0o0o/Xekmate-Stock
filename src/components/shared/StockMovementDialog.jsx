@@ -20,33 +20,42 @@ export default function StockMovementDialog({ open, onOpenChange, item, entityTy
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
-    if (!qty || qty <= 0) { toast.error('Quantidade deve ser maior que 0'); return; }
+    const requestedQty = Number(qty);
+    if (!Number.isFinite(requestedQty) || requestedQty < 0 || (type !== 'Ajuste' && requestedQty <= 0)) {
+      toast.error(type === 'Ajuste' ? 'Quantidade não pode ser negativa' : 'Quantidade deve ser maior que 0');
+      return;
+    }
     if (type === 'Ajuste' && !reason.trim()) { toast.error('Motivo é obrigatório para ajustes'); return; }
     
     const currentQty = Number(item.quantity) || 0;
     let newQty;
-    if (type === 'Entrada') newQty = currentQty + Number(qty);
+    if (type === 'Entrada') newQty = currentQty + requestedQty;
     else if (type === 'Saída') {
-      newQty = currentQty - Number(qty);
+      newQty = currentQty - requestedQty;
       if (newQty < 0) { toast.error('Quantidade insuficiente em stock'); return; }
     } else {
-      newQty = Number(qty);
+      newQty = requestedQty;
       if (newQty < 0) { toast.error('Quantidade não pode ser negativa'); return; }
     }
 
     setSaving(true);
-    await entityService.update(item.id, { quantity: newQty, updatedBy: user?.full_name || user?.email });
-    await stockMovementService.create({
-      itemType: entityType, itemId: item.id, itemName: item.name,
-      movementType: type, previousQuantity: currentQty, newQuantity: newQty,
-      quantityChanged: type === 'Ajuste' ? newQty - currentQty : (type === 'Entrada' ? Number(qty) : -Number(qty)),
-      reason: reason || `${type} de stock`, userId: user?.id, userName: user?.full_name || user?.email
-    });
-    toast.success(`Movimento de ${type.toLowerCase()} registado`);
-    setSaving(false);
-    setType('Entrada'); setQty(1); setReason('');
-    onOpenChange(false);
-    onComplete();
+    try {
+      await entityService.update(item.id, { quantity: newQty, updatedBy: user?.full_name || user?.email });
+      await stockMovementService.create({
+        itemType: entityType, itemId: item.id, itemName: item.name,
+        movementType: type, previousQuantity: currentQty, newQuantity: newQty,
+        quantityChanged: type === 'Ajuste' ? newQty - currentQty : (type === 'Entrada' ? requestedQty : -requestedQty),
+        reason: reason || `${type} de stock`, userId: user?.id, userName: user?.full_name || user?.email
+      });
+      toast.success(`Movimento de ${type.toLowerCase()} registado`);
+      setType('Entrada'); setQty(1); setReason('');
+      onOpenChange(false);
+      onComplete();
+    } catch (error) {
+      toast.error(error.message || 'Não foi possível registar o movimento');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
