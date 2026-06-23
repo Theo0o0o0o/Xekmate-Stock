@@ -12,24 +12,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Truck, Pencil, Mail, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { supplierService } from '@/services/supplierService';
+import { useI18n } from '@/lib/i18n';
 
 export default function Suppliers() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', contactName: '', phone: '', email: '', address: '', notes: '' });
 
   const { data: suppliers = [], isLoading } = useQuery({
-    queryKey: ['suppliers'], queryFn: () => supplierService.list('name', 200)
+    queryKey: ['suppliers'],
+    queryFn: () => supplierService.list('name', 200),
   });
 
   const saveMutation = useMutation({
     mutationFn: (data) => editing ? supplierService.update(editing.id, data) : supplierService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast.success(editing ? 'Fornecedor atualizado' : 'Fornecedor criado');
-      setShowDialog(false); setEditing(null);
-    }
+      toast.success(editing ? t('suppliers_updated') : t('suppliers_created'));
+      setShowDialog(false);
+      setEditing(null);
+    },
   });
 
   const openNew = () => {
@@ -37,40 +41,51 @@ export default function Suppliers() {
     setForm({ name: '', contactName: '', phone: '', email: '', address: '', notes: '' });
     setShowDialog(true);
   };
-  const openEdit = (s) => {
-    setEditing(s);
-    setForm({ name: s.name, contactName: s.contactName || '', phone: s.phone || '', email: s.email || '', address: s.address || '', notes: s.notes || '' });
+
+  const openEdit = (supplier) => {
+    setEditing(supplier);
+    setForm({
+      name: supplier.name,
+      contactName: supplier.contactName || '',
+      phone: supplier.phone || '',
+      email: supplier.email || '',
+      address: supplier.address || '',
+      notes: supplier.notes || '',
+    });
     setShowDialog(true);
   };
 
   const handleSave = () => {
-    if (!form.name.trim()) { toast.error('Nome é obrigatório'); return; }
+    if (!form.name.trim()) {
+      toast.error(t('suppliers_name_required'));
+      return;
+    }
     saveMutation.mutate(form);
   };
 
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Fornecedores"
-        description={`${suppliers.length} fornecedores registados`}
+        title={t('suppliers_title')}
+        description={`${suppliers.length} ${t('suppliers_registered')}`}
         actions={
           <Button size="sm" onClick={openNew} className="h-8 text-xs">
-            <Plus className="w-3.5 h-3.5 mr-1" />Adicionar
+            <Plus className="w-3.5 h-3.5 mr-1" />{t('common_add')}
           </Button>
         }
       />
 
       {isLoading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{[1,2,3].map(i => <Skeleton key={i} className="h-24 rounded" />)}</div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded" />)}</div>
       ) : suppliers.length === 0 ? (
-        <EmptyState icon={Truck} title="Sem fornecedores" description="Adicione o primeiro fornecedor" actionLabel="Adicionar" onAction={openNew} />
+        <EmptyState icon={Truck} title={t('suppliers_empty_title')} description={t('suppliers_empty_desc')} actionLabel={t('common_add')} onAction={openNew} />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {suppliers.map(s => (
+          {suppliers.map((supplier) => (
             <Card
-              key={s.id}
+              key={supplier.id}
               className="p-4 hover:shadow-sm transition-shadow cursor-pointer border-border shadow-none group"
-              onClick={() => openEdit(s)}
+              onClick={() => openEdit(supplier)}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="space-y-1.5 min-w-0">
@@ -78,19 +93,19 @@ export default function Suppliers() {
                     <div className="w-6 h-6 rounded bg-muted flex items-center justify-center shrink-0">
                       <Truck className="w-3.5 h-3.5 text-primary" />
                     </div>
-                    <h3 className="font-semibold text-[13px] truncate">{s.name}</h3>
+                    <h3 className="font-semibold text-[13px] truncate">{supplier.name}</h3>
                   </div>
-                  {s.contactName && (
-                    <p className="text-[12px] text-muted-foreground pl-8">{s.contactName}</p>
+                  {supplier.contactName && (
+                    <p className="text-[12px] text-muted-foreground pl-8">{supplier.contactName}</p>
                   )}
-                  {s.phone && (
+                  {supplier.phone && (
                     <p className="text-[12px] text-muted-foreground flex items-center gap-1.5 pl-8">
-                      <Phone className="w-3 h-3 shrink-0" />{s.phone}
+                      <Phone className="w-3 h-3 shrink-0" />{supplier.phone}
                     </p>
                   )}
-                  {s.email && (
+                  {supplier.email && (
                     <p className="text-[12px] text-muted-foreground flex items-center gap-1.5 pl-8 truncate">
-                      <Mail className="w-3 h-3 shrink-0" />{s.email}
+                      <Mail className="w-3 h-3 shrink-0" />{supplier.email}
                     </p>
                   )}
                 </div>
@@ -104,40 +119,40 @@ export default function Suppliers() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-base">{editing ? 'Editar Fornecedor' : 'Novo Fornecedor'}</DialogTitle>
+            <DialogTitle className="text-base">{editing ? t('suppliers_edit_title') : t('suppliers_new_title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label className="text-[12px]">Nome *</Label>
-              <Input className="h-8 text-sm" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              <Label className="text-[12px]">{t('locations_name_label')}</Label>
+              <Input className="h-8 text-sm" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[12px]">Contacto</Label>
-              <Input className="h-8 text-sm" value={form.contactName} onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))} />
+              <Label className="text-[12px]">{t('common_contact')}</Label>
+              <Input className="h-8 text-sm" value={form.contactName} onChange={(e) => setForm((f) => ({ ...f, contactName: e.target.value }))} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-[12px]">Telefone</Label>
-                <Input className="h-8 text-sm" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+                <Label className="text-[12px]">{t('common_phone')}</Label>
+                <Input className="h-8 text-sm" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[12px]">Email</Label>
-                <Input className="h-8 text-sm" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                <Input className="h-8 text-sm" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[12px]">Morada</Label>
-              <Input className="h-8 text-sm" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+              <Label className="text-[12px]">{t('common_address')}</Label>
+              <Input className="h-8 text-sm" value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[12px]">Observações</Label>
-              <Textarea className="text-sm resize-none" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
+              <Label className="text-[12px]">{t('common_notes')}</Label>
+              <Textarea className="text-sm resize-none" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={2} />
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowDialog(false)}>Cancelar</Button>
+            <Button variant="outline" size="sm" onClick={() => setShowDialog(false)}>{t('btn_cancelar')}</Button>
             <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
+              {saveMutation.isPending ? t('users_a_guardar') : t('btn_guardar')}
             </Button>
           </DialogFooter>
         </DialogContent>

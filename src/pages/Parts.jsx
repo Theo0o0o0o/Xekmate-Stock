@@ -17,9 +17,11 @@ import { Plus, Search, Wrench, Pencil, Trash2, ArrowLeftRight, X } from 'lucide-
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { partService } from '@/services/partService';
+import { useI18n } from '@/lib/i18n';
 
 export default function Parts() {
   const { isAdmin } = useUserRole();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const location = useLocation();
   const navigate = useNavigate();
@@ -32,40 +34,47 @@ export default function Parts() {
   const [movementItem, setMovementItem] = useState(null);
 
   const { data: parts = [], isLoading } = useQuery({
-    queryKey: ['parts'], queryFn: () => partService.list('-created_date', 500)
+    queryKey: ['parts'],
+    queryFn: () => partService.list('-created_date', 500),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => partService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parts'] });
-      toast.success('Peça eliminada');
+      toast.success(t('parts_deleted'));
       setDeleteId(null);
-    }
+    },
   });
 
   const filtered = useMemo(() => {
     let items = parts;
     if (search) {
       const s = search.toLowerCase();
-      items = items.filter(p =>
-        p.name?.toLowerCase().includes(s) || p.referenceCode?.toLowerCase().includes(s) ||
-        p.compatibleModels?.toLowerCase().includes(s) || p.location?.toLowerCase().includes(s)
+      items = items.filter((p) =>
+        p.name?.toLowerCase().includes(s) ||
+        p.referenceCode?.toLowerCase().includes(s) ||
+        p.compatibleModels?.toLowerCase().includes(s) ||
+        p.location?.toLowerCase().includes(s)
       );
     }
-    if (stockFilter === 'low') items = items.filter(p => p.quantity > 0 && p.quantity <= p.minimumStock);
-    if (stockFilter === 'out') items = items.filter(p => p.quantity <= 0);
+    if (stockFilter === 'low') items = items.filter((p) => p.quantity > 0 && p.quantity <= p.minimumStock);
+    if (stockFilter === 'out') items = items.filter((p) => p.quantity <= 0);
     return items;
   }, [parts, search, stockFilter]);
 
   const handleSaved = () => {
-    setShowForm(false); setEditingItem(null); setSearchParams({});
+    setShowForm(false);
+    setEditingItem(null);
+    setSearchParams({});
     queryClient.invalidateQueries({ queryKey: ['parts'] });
     queryClient.invalidateQueries({ queryKey: ['movements'] });
   };
 
   const handleCancel = () => {
-    setShowForm(false); setEditingItem(null); setSearchParams({});
+    setShowForm(false);
+    setEditingItem(null);
+    setSearchParams({});
     if (location.state?.from === 'dashboard') navigate('/');
   };
 
@@ -76,11 +85,11 @@ export default function Parts() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Peças"
-        description={`${parts.length} peças registadas`}
+        title={t('parts_title')}
+        description={`${parts.length} ${t('parts_registered')}`}
         actions={isAdmin && (
           <Button size="sm" onClick={() => setShowForm(true)} className="h-8 text-xs">
-            <Plus className="w-3.5 h-3.5 mr-1" />Adicionar
+            <Plus className="w-3.5 h-3.5 mr-1" />{t('common_add')}
           </Button>
         )}
       />
@@ -88,14 +97,14 @@ export default function Parts() {
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Pesquisar por nome, referência, modelo compatível..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
+          <Input placeholder={t('parts_search')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
         </div>
         <Select value={stockFilter} onValueChange={setStockFilter}>
           <SelectTrigger className="w-full sm:w-36 h-8 text-sm"><SelectValue placeholder="Stock" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todo o stock</SelectItem>
-            <SelectItem value="low">Stock baixo</SelectItem>
-            <SelectItem value="out">Esgotado</SelectItem>
+            <SelectItem value="all">{t('stock_all')}</SelectItem>
+            <SelectItem value="low">{t('stock_low_filter')}</SelectItem>
+            <SelectItem value="out">{t('stock_out_filter')}</SelectItem>
           </SelectContent>
         </Select>
         {(search || stockFilter !== 'all') && (
@@ -106,26 +115,26 @@ export default function Parts() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-1.5">{[1,2,3,4].map(i => <Skeleton key={i} className="h-11 rounded" />)}</div>
+        <div className="space-y-1.5">{[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-11 rounded" />)}</div>
       ) : filtered.length === 0 ? (
-        <EmptyState icon={Wrench} title="Sem peças" description={search ? 'Nenhum resultado' : 'Adicione a primeira peça'} actionLabel={isAdmin ? 'Adicionar' : undefined} onAction={isAdmin ? () => setShowForm(true) : undefined} />
+        <EmptyState icon={Wrench} title={t('parts_empty_title')} description={search ? t('common_no_results') : t('parts_empty_desc')} actionLabel={isAdmin ? t('common_add') : undefined} onAction={isAdmin ? () => setShowForm(true) : undefined} />
       ) : (
         <Card className="overflow-hidden shadow-none border-border">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Nome</TableHead>
-                  <TableHead className="hidden md:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Referência</TableHead>
-                  <TableHead className="hidden lg:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Modelos</TableHead>
-                  <TableHead className="text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Qtd</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Estado</TableHead>
-                  <TableHead className="hidden md:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Localização</TableHead>
-                  <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Ações</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_name')}</TableHead>
+                  <TableHead className="hidden md:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_reference')}</TableHead>
+                  <TableHead className="hidden lg:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_models')}</TableHead>
+                  <TableHead className="text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_quantity_short')}</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_status')}</TableHead>
+                  <TableHead className="hidden md:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_location')}</TableHead>
+                  <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(p => {
+                {filtered.map((p) => {
                   const stockStatus = getStockStatus(p.quantity, p.minimumStock);
                   return (
                     <TableRow key={p.id} className="hover:bg-muted/20 transition-colors">
@@ -134,13 +143,13 @@ export default function Parts() {
                         <p className="text-[11px] text-muted-foreground md:hidden">{p.referenceCode}</p>
                       </TableCell>
                       <TableCell className="hidden md:table-cell font-mono text-[11px] text-muted-foreground py-2.5">{p.referenceCode}</TableCell>
-                      <TableCell className="hidden lg:table-cell text-[12px] text-muted-foreground py-2.5">{p.compatibleModels || '—'}</TableCell>
+                      <TableCell className="hidden lg:table-cell text-[12px] text-muted-foreground py-2.5">{p.compatibleModels || '-'}</TableCell>
                       <TableCell className="text-center font-semibold text-[13px] py-2.5">{p.quantity}</TableCell>
                       <TableCell className="py-2.5"><StatusBadge status={stockStatus} type="stock" /></TableCell>
-                      <TableCell className="hidden md:table-cell text-[13px] text-muted-foreground py-2.5">{p.location || '—'}</TableCell>
+                      <TableCell className="hidden md:table-cell text-[13px] text-muted-foreground py-2.5">{p.location || '-'}</TableCell>
                       <TableCell className="text-right py-2.5">
                         <div className="flex items-center justify-end gap-0.5">
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => setMovementItem(p)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => setMovementItem(p)} title={t('register_movement')}>
                             <ArrowLeftRight className="w-3.5 h-3.5" />
                           </Button>
                           {isAdmin && (
@@ -162,7 +171,7 @@ export default function Parts() {
             </Table>
           </div>
           <div className="px-4 py-2 border-t border-border bg-muted/20">
-            <p className="text-[11px] text-muted-foreground">{filtered.length} de {parts.length} peças</p>
+            <p className="text-[11px] text-muted-foreground">{filtered.length} {t('equipment_showing')} {parts.length} {t('dashboard_subtitle_pecas')}</p>
           </div>
         </Card>
       )}
@@ -170,7 +179,7 @@ export default function Parts() {
       {movementItem && (
         <StockMovementDialog open={!!movementItem} onOpenChange={() => setMovementItem(null)} item={movementItem} entityType="Part" onComplete={handleSaved} />
       )}
-      <ConfirmDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)} title="Eliminar peça" description="Esta ação não pode ser desfeita." onConfirm={() => deleteMutation.mutate(deleteId)} confirmLabel="Eliminar" destructive />
+      <ConfirmDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)} title={t('parts_delete_title')} description={t('delete_irreversible')} onConfirm={() => deleteMutation.mutate(deleteId)} confirmLabel={t('common_delete')} destructive />
     </div>
   );
 }

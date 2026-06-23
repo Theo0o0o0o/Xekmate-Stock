@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { translateValue, useI18n } from '@/lib/i18n';
 const equipmentStatusStyles = {
   'Disponível':     'bg-emerald-50 text-emerald-700 border-emerald-200',
   'Em uso interno': 'bg-blue-50 text-blue-700 border-blue-200',
@@ -35,6 +36,7 @@ export function getStockStatus(quantity, minimumStock) {
 const fallback = 'bg-slate-100 text-slate-600 border-slate-200';
 
 export default function StatusBadge({ status, type = 'equipment' }) {
+  const { t } = useI18n();
   const styleMap =
     type === 'stock' ? stockStatusStyles :
     type === 'movement' ? movementTypeStyles :
@@ -47,7 +49,7 @@ export default function StatusBadge({ status, type = 'equipment' }) {
       "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border",
       cls
     )}>
-      {status}
+      {translateValue(t, status)}
     </span>
   );
 }

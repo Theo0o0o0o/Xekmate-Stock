@@ -13,17 +13,20 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, MapPin, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { locationService } from '@/services/locationService';
+import { translateValue, useI18n } from '@/lib/i18n';
 
 const TYPES = ['Armazém', 'Prateleira', 'Sala', 'Oficina', 'Cliente', 'Outro'];
 
 export default function Locations() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', description: '', type: 'Armazém', active: true });
 
   const { data: locations = [], isLoading } = useQuery({
-    queryKey: ['locations-all'], queryFn: () => locationService.list('name', 200)
+    queryKey: ['locations-all'],
+    queryFn: () => locationService.list('name', 200),
   });
 
   const saveMutation = useMutation({
@@ -31,9 +34,10 @@ export default function Locations() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locations-all'] });
       queryClient.invalidateQueries({ queryKey: ['locations'] });
-      toast.success(editing ? 'Localização atualizada' : 'Localização criada');
-      setShowDialog(false); setEditing(null);
-    }
+      toast.success(editing ? t('locations_updated') : t('locations_created'));
+      setShowDialog(false);
+      setEditing(null);
+    },
   });
 
   const openNew = () => {
@@ -41,6 +45,7 @@ export default function Locations() {
     setForm({ name: '', description: '', type: 'Armazém', active: true });
     setShowDialog(true);
   };
+
   const openEdit = (loc) => {
     setEditing(loc);
     setForm({ name: loc.name, description: loc.description || '', type: loc.type, active: loc.active !== false });
@@ -48,29 +53,32 @@ export default function Locations() {
   };
 
   const handleSave = () => {
-    if (!form.name.trim()) { toast.error('Nome é obrigatório'); return; }
+    if (!form.name.trim()) {
+      toast.error(t('locations_name_required'));
+      return;
+    }
     saveMutation.mutate(form);
   };
 
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Localizações"
-        description={`${locations.length} localizações registadas`}
+        title={t('locations_title')}
+        description={`${locations.length} ${t('locations_registered')}`}
         actions={
           <Button size="sm" onClick={openNew} className="h-8 text-xs">
-            <Plus className="w-3.5 h-3.5 mr-1" />Adicionar
+            <Plus className="w-3.5 h-3.5 mr-1" />{t('common_add')}
           </Button>
         }
       />
 
       {isLoading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded" />)}</div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 rounded" />)}</div>
       ) : locations.length === 0 ? (
-        <EmptyState icon={MapPin} title="Sem localizações" description="Adicione a primeira localização" actionLabel="Adicionar" onAction={openNew} />
+        <EmptyState icon={MapPin} title={t('locations_empty_title')} description={t('locations_empty_desc')} actionLabel={t('common_add')} onAction={openNew} />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {locations.map(loc => (
+          {locations.map((loc) => (
             <Card
               key={loc.id}
               className="p-4 hover:shadow-sm transition-shadow cursor-pointer border-border shadow-none group"
@@ -84,14 +92,14 @@ export default function Locations() {
                     </div>
                     <h3 className="font-semibold text-[13px] truncate">{loc.name}</h3>
                   </div>
-                  <p className="text-[11px] text-muted-foreground pl-8">{loc.type}</p>
+                  <p className="text-[11px] text-muted-foreground pl-8">{translateValue(t, loc.type)}</p>
                   {loc.description && (
                     <p className="text-[11px] text-muted-foreground pl-8 mt-0.5 truncate">{loc.description}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded border ${loc.active !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                    {loc.active !== false ? 'Ativa' : 'Inativa'}
+                    {loc.active !== false ? t('locations_active') : t('locations_inactive')}
                   </span>
                   <Pencil className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
@@ -104,33 +112,37 @@ export default function Locations() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-base">{editing ? 'Editar Localização' : 'Nova Localização'}</DialogTitle>
+            <DialogTitle className="text-base">{editing ? t('locations_edit_title') : t('locations_new_title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label className="text-[12px]">Nome *</Label>
-              <Input className="h-8 text-sm" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              <Label className="text-[12px]">{t('locations_name_label')}</Label>
+              <Input className="h-8 text-sm" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[12px]">Descrição</Label>
-              <Input className="h-8 text-sm" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+              <Label className="text-[12px]">{t('locations_description_label')}</Label>
+              <Input className="h-8 text-sm" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[12px]">Tipo</Label>
-              <Select value={form.type} onValueChange={v => setForm(f => ({ ...f, type: v }))}>
+              <Label className="text-[12px]">{t('locations_type_label')}</Label>
+              <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v }))}>
                 <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>{TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  {TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>{translateValue(t, type)}</SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="flex items-center justify-between py-1">
-              <Label className="text-[12px]">Localização ativa</Label>
-              <Switch checked={form.active} onCheckedChange={v => setForm(f => ({ ...f, active: v }))} />
+              <Label className="text-[12px]">{t('locations_active_label')}</Label>
+              <Switch checked={form.active} onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))} />
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowDialog(false)}>Cancelar</Button>
+            <Button variant="outline" size="sm" onClick={() => setShowDialog(false)}>{t('btn_cancelar')}</Button>
             <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? 'A guardar...' : 'Guardar'}
+              {saveMutation.isPending ? t('users_a_guardar') : t('btn_guardar')}
             </Button>
           </DialogFooter>
         </DialogContent>

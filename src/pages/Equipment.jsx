@@ -16,9 +16,14 @@ import { Plus, Search, Printer, Eye, Pencil, Trash2, X } from 'lucide-react';
 import { Link, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { equipmentService } from '@/services/equipmentService';
+import { translateValue, useI18n } from '@/lib/i18n';
+
+const STATUS_OPTIONS = ['Disponível', 'Em uso interno', 'Em cliente', 'Em manutenção', 'Reservada', 'Vendida', 'Abatida'];
+const CATEGORY_OPTIONS = ['Impressora', 'Multifuncional', 'Plotter', 'Scanner', 'Outro'];
 
 export default function Equipment() {
   const { isAdmin } = useUserRole();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const location = useLocation();
   const navigate = useNavigate();
@@ -31,55 +36,63 @@ export default function Equipment() {
   const [deleteId, setDeleteId] = useState(null);
 
   const { data: equipment = [], isLoading } = useQuery({
-    queryKey: ['equipment'], queryFn: () => equipmentService.list('-created_date', 500),
+    queryKey: ['equipment'],
+    queryFn: () => equipmentService.list('-created_date', 500),
     onSuccess: (data) => {
       const editId = location.state?.editId;
       if (editId && !editingItem && !showForm) {
-        const found = data.find(e => e.id === editId);
+        const found = data.find((e) => e.id === editId);
         if (found) setEditingItem(found);
       }
-    }
+    },
   });
+
   useEffect(() => {
     const editId = location.state?.editId;
     if (editId && equipment.length > 0 && !editingItem && !showForm) {
-      const found = equipment.find(e => e.id === editId);
+      const found = equipment.find((e) => e.id === editId);
       if (found) setEditingItem(found);
     }
-  }, [location.state, equipment]);
+  }, [location.state, equipment, editingItem, showForm]);
 
   const deleteMutation = useMutation({
     mutationFn: (id) => equipmentService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['equipment'] });
-      toast.success('Equipamento eliminado');
+      toast.success(t('equipment_deleted'));
       setDeleteId(null);
-    }
+    },
   });
 
   const filtered = useMemo(() => {
     let items = equipment;
     if (search) {
       const s = search.toLowerCase();
-      items = items.filter(e =>
-        e.name?.toLowerCase().includes(s) || e.brand?.toLowerCase().includes(s) ||
-        e.serialNumber?.toLowerCase().includes(s) || e.clientName?.toLowerCase().includes(s) ||
+      items = items.filter((e) =>
+        e.name?.toLowerCase().includes(s) ||
+        e.brand?.toLowerCase().includes(s) ||
+        e.serialNumber?.toLowerCase().includes(s) ||
+        e.clientName?.toLowerCase().includes(s) ||
         e.location?.toLowerCase().includes(s)
       );
     }
-    if (statusFilter !== 'all') items = items.filter(e => e.status === statusFilter);
-    if (categoryFilter !== 'all') items = items.filter(e => e.category === categoryFilter);
+    if (statusFilter !== 'all') items = items.filter((e) => e.status === statusFilter);
+    if (categoryFilter !== 'all') items = items.filter((e) => e.category === categoryFilter);
     return items;
   }, [equipment, search, statusFilter, categoryFilter]);
 
   const handleSaved = () => {
-    setShowForm(false); setEditingItem(null); setSearchParams({});
+    setShowForm(false);
+    setEditingItem(null);
+    setSearchParams({});
     queryClient.invalidateQueries({ queryKey: ['equipment'] });
     queryClient.invalidateQueries({ queryKey: ['movements'] });
   };
 
   const handleCancel = () => {
-    setShowForm(false); setEditingItem(null); setSearchParams({});
+    setShowForm(false);
+    setEditingItem(null);
+    setSearchParams({});
     if (location.state?.from === 'dashboard') navigate('/');
   };
 
@@ -90,34 +103,35 @@ export default function Equipment() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Equipamentos"
-        description={`${equipment.length} equipamentos registados`}
+        title={t('equipment_title')}
+        description={`${equipment.length} ${t('equipment_registered')}`}
         actions={isAdmin && (
           <Button size="sm" onClick={() => setShowForm(true)} className="h-8 text-xs">
-            <Plus className="w-3.5 h-3.5 mr-1" />Adicionar
+            <Plus className="w-3.5 h-3.5 mr-1" />{t('common_add')}
           </Button>
         )}
       />
-<div className="flex flex-col sm:flex-row gap-2">
+
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Pesquisar por nome, marca, nº série, cliente..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
+          <Input placeholder={t('equipment_search')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-40 h-8 text-sm"><SelectValue placeholder="Estado" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-40 h-8 text-sm"><SelectValue placeholder={t('common_status')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os estados</SelectItem>
-            {['Disponível','Em uso interno','Em cliente','Em manutenção','Reservada','Vendida','Abatida'].map(s => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+            <SelectItem value="all">{t('equipment_all_statuses')}</SelectItem>
+            {STATUS_OPTIONS.map((status) => (
+              <SelectItem key={status} value={status}>{translateValue(t, status)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full sm:w-40 h-8 text-sm"><SelectValue placeholder="Categoria" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-40 h-8 text-sm"><SelectValue placeholder={t('common_category')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas as categorias</SelectItem>
-            {['Impressora','Multifuncional','Plotter','Scanner','Outro'].map(c => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
+            <SelectItem value="all">{t('equipment_all_categories')}</SelectItem>
+            {CATEGORY_OPTIONS.map((category) => (
+              <SelectItem key={category} value={category}>{translateValue(t, category)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -129,35 +143,41 @@ export default function Equipment() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-1.5">{[1,2,3,4].map(i => <Skeleton key={i} className="h-11 rounded" />)}</div>
+        <div className="space-y-1.5">{[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-11 rounded" />)}</div>
       ) : filtered.length === 0 ? (
-        <EmptyState icon={Printer} title="Sem equipamentos" description={search ? 'Nenhum resultado encontrado' : 'Adicione o primeiro equipamento'} actionLabel={isAdmin ? 'Adicionar Equipamento' : undefined} onAction={isAdmin ? () => setShowForm(true) : undefined} />
+        <EmptyState
+          icon={Printer}
+          title={t('equipment_empty_title')}
+          description={search ? t('common_no_results') : t('equipment_empty_desc')}
+          actionLabel={isAdmin ? t('equipment_add') : undefined}
+          onAction={isAdmin ? () => setShowForm(true) : undefined}
+        />
       ) : (
         <Card className="overflow-hidden shadow-none border-border">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Nome / Modelo</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Marca</TableHead>
-                  <TableHead className="hidden md:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Nº Série</TableHead>
-                  <TableHead className="hidden lg:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Categoria</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Estado</TableHead>
-                  <TableHead className="hidden md:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Localização</TableHead>
-                  <TableHead className="hidden lg:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Cliente</TableHead>
-                  <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">Ações</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('equipment_name_model')}</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_brand')}</TableHead>
+                  <TableHead className="hidden md:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('equipment_serial_number')}</TableHead>
+                  <TableHead className="hidden lg:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_category')}</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_status')}</TableHead>
+                  <TableHead className="hidden md:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_location')}</TableHead>
+                  <TableHead className="hidden lg:table-cell text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_client')}</TableHead>
+                  <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2.5">{t('common_actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(eq => (
+                {filtered.map((eq) => (
                   <TableRow key={eq.id} className="hover:bg-muted/20 transition-colors">
                     <TableCell className="font-medium text-[13px] py-2.5">{eq.name}</TableCell>
                     <TableCell className="text-muted-foreground text-[13px] py-2.5">{eq.brand}</TableCell>
                     <TableCell className="hidden md:table-cell font-mono text-[11px] text-muted-foreground py-2.5">{eq.serialNumber}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-[13px] text-muted-foreground py-2.5">{eq.category}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-[13px] text-muted-foreground py-2.5">{translateValue(t, eq.category)}</TableCell>
                     <TableCell className="py-2.5"><StatusBadge status={eq.status} /></TableCell>
-                    <TableCell className="hidden md:table-cell text-[13px] text-muted-foreground py-2.5">{eq.location || '—'}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-[13px] text-muted-foreground py-2.5">{eq.clientName || '—'}</TableCell>
+                    <TableCell className="hidden md:table-cell text-[13px] text-muted-foreground py-2.5">{eq.location || '-'}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-[13px] text-muted-foreground py-2.5">{eq.clientName || '-'}</TableCell>
                     <TableCell className="text-right py-2.5">
                       <div className="flex items-center justify-end gap-0.5">
                         <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
@@ -181,17 +201,19 @@ export default function Equipment() {
             </Table>
           </div>
           <div className="px-4 py-2 border-t border-border bg-muted/20">
-            <p className="text-[11px] text-muted-foreground">{filtered.length} de {equipment.length} equipamentos</p>
+            <p className="text-[11px] text-muted-foreground">{filtered.length} {t('equipment_showing')} {equipment.length} {t('dashboard_subtitle_eq')}</p>
           </div>
         </Card>
       )}
 
       <ConfirmDialog
-        open={!!deleteId} onOpenChange={() => setDeleteId(null)}
-        title="Eliminar equipamento"
-        description="Tem a certeza que pretende eliminar este equipamento? Esta ação não pode ser desfeita."
+        open={!!deleteId}
+        onOpenChange={() => setDeleteId(null)}
+        title={t('equipment_delete_title')}
+        description={t('equipment_delete_desc')}
         onConfirm={() => deleteMutation.mutate(deleteId)}
-        confirmLabel="Eliminar" destructive
+        confirmLabel={t('common_delete')}
+        destructive
       />
     </div>
   );
