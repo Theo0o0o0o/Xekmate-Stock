@@ -18,9 +18,9 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const toggleDarkMode = (val) => {
-    setDarkMode(val);
-    if (val) {
+  const toggleDarkMode = (value) => {
+    setDarkMode(value);
+    if (value) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
     } else {
@@ -58,12 +58,12 @@ export default function Settings() {
 
     try {
       await updateAccessPassword(currentPassword, newPassword);
-      toast.success('Senha de acesso alterada com sucesso');
+      toast.success(t('settings_access_success'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      toast.error(error.message || 'Não foi possível alterar a senha de acesso');
+      toast.error(error.message || t('settings_access_error'));
     }
   };
 
@@ -101,9 +101,9 @@ export default function Settings() {
         <CardContent className="px-4 py-4 space-y-3">
           <div className="flex items-center justify-between">
             <Label className="text-[13px]">{t('settings_idioma_label')}</Label>
-            <Select value={lang} onValueChange={(val) => {
-              setLang(val);
-              toast.success(val === 'pt' ? 'Idioma alterado para Português (Portugal)' : 'Language changed to English');
+            <Select value={lang} onValueChange={(value) => {
+              setLang(value);
+              toast.success(value === 'pt' ? t('settings_lang_changed_pt') : t('settings_lang_changed_en'));
             }}>
               <SelectTrigger className="h-8 text-sm w-44">
                 <SelectValue />
@@ -124,22 +124,22 @@ export default function Settings() {
           </CardTitle>
         </CardHeader>
         <CardContent className="px-4 py-4 space-y-3">
-          <p className="text-[11px] text-muted-foreground">Senha pedida antes do login e do registo.</p>
+          <p className="text-[11px] text-muted-foreground">{t('settings_access_desc')}</p>
           <div className="space-y-1.5">
-            <Label className="text-[12px]">Senha de acesso atual</Label>
-            <Input type="password" className="h-8 text-sm" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••" />
+            <Label className="text-[12px]">{t('settings_access_current')}</Label>
+            <Input type="password" className="h-8 text-sm" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••••" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-[12px]">Nova senha de acesso</Label>
-            <Input type="password" className="h-8 text-sm" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" />
+            <Label className="text-[12px]">{t('settings_access_new')}</Label>
+            <Input type="password" className="h-8 text-sm" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-[12px]">Confirmar nova senha de acesso</Label>
-            <Input type="password" className="h-8 text-sm" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" />
+            <Label className="text-[12px]">{t('settings_access_confirm')}</Label>
+            <Input type="password" className="h-8 text-sm" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" />
           </div>
           <div className="flex justify-end pt-1">
             <Button size="sm" className="h-8 text-xs" onClick={handleChangePassword}>
-              <Shield className="w-3.5 h-3.5 mr-1" />Alterar senha de acesso
+              <Shield className="w-3.5 h-3.5 mr-1" />{t('settings_access_change')}
             </Button>
           </div>
         </CardContent>

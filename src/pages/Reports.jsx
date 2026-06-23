@@ -16,7 +16,7 @@ import { locationService } from '@/services/locationService';
 import { supplierService } from '@/services/supplierService';
 import { exportEquipamentos, exportConsumiveis, exportPecas, exportTudo } from '@/utils/exportXlsx';
 import { toast } from 'sonner';
-import { useI18n } from '@/lib/i18n';
+import { translateValue, useI18n } from '@/lib/i18n';
 
 const CHART_COLORS = ['#D71920', '#2563EB', '#16A34A', '#D97706', '#7C3AED', '#0891B2', '#9F1239'];
 
@@ -46,13 +46,13 @@ export default function Reports() {
   ];
 
   const statusData = ['Disponível', 'Em uso interno', 'Em cliente', 'Em manutenção', 'Reservada', 'Vendida', 'Abatida']
-    .map((s, i) => ({ name: s, value: equipment.filter(e => e.status === s).length, fill: CHART_COLORS[i] }))
+    .map((s, i) => ({ name: translateValue(t, s), value: equipment.filter(e => e.status === s).length, fill: CHART_COLORS[i] }))
     .filter(d => d.value > 0);
 
   const locationData = {};
   equipment.forEach(e => { if (e.location) locationData[e.location] = (locationData[e.location] || 0) + 1; });
   const locChartData = Object.entries(locationData)
-    .map(([name, value]) => ({ name, value }))
+    .map(([name, value]) => ({ name: translateValue(t, name), value }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
 

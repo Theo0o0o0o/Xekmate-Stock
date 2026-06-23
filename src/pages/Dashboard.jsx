@@ -14,7 +14,7 @@ import { equipmentService } from '@/services/equipmentService';
 import { consumableService } from '@/services/consumableService';
 import { partService } from '@/services/partService';
 import { stockMovementService } from '@/services/stockMovementService';
-import { useI18n } from '@/lib/i18n';
+import { translateValue, useI18n } from '@/lib/i18n';
 
 const CHART_COLORS = ['#D71920', '#2563EB', '#16A34A', '#D97706', '#7C3AED', '#0891B2', '#9F1239'];
 
@@ -65,7 +65,7 @@ export default function Dashboard() {
   ];
 
   const statusData = ['Disponível', 'Em uso interno', 'Em cliente', 'Em manutenção', 'Reservada', 'Vendida', 'Abatida']
-    .map((s, i) => ({ name: s, value: equipment.filter(e => e.status === s).length, color: CHART_COLORS[i] }))
+    .map((s, i) => ({ name: translateValue(t, s), value: equipment.filter(e => e.status === s).length, color: CHART_COLORS[i] }))
     .filter(d => d.value > 0);
 
   if (isLoading) {

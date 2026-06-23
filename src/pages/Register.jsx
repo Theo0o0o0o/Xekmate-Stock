@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserPlus, User, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
+import { useI18n } from "@/lib/i18n";
 
 export default function Register() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,18 +20,18 @@ export default function Register() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
     setSuccess("");
 
     if (!fullName.trim()) {
-      setError("O nome é obrigatório");
+      setError(t('register_name_required'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("As palavras-passe não coincidem");
+      setError(t('settings_pass_erro_match'));
       return;
     }
 
@@ -51,12 +53,12 @@ export default function Register() {
         return;
       }
 
-      setSuccess("Conta criada. Confirme o email e depois entre normalmente.");
+      setSuccess(t('register_email_verify'));
     } catch (err) {
       if (err.message?.toLowerCase().includes('email rate limit')) {
-        setError('O Supabase bloqueou temporariamente o envio de emails de confirmação. Aguarde alguns minutos e tente novamente.');
+        setError(t('register_error_rate_limit'));
       } else {
-        setError(err.message || "Não foi possível criar a conta");
+        setError(err.message || t('register_error_create'));
       }
     } finally {
       setLoading(false);
@@ -67,11 +69,11 @@ export default function Register() {
     return (
       <AuthLayout
         icon={Mail}
-        title="Verificar email"
+        title={t('register_email_verify_title')}
         subtitle={null}
         footer={
           <Link to="/login" className="text-primary font-medium hover:underline">
-            Voltar ao login
+            {t('register_back_login')}
           </Link>
         }
       >
@@ -85,13 +87,13 @@ export default function Register() {
   return (
     <AuthLayout
       icon={UserPlus}
-      title="Criar conta"
-      subtitle="Registe-se para começar"
+      title={t('register_title')}
+      subtitle={t('register_subtitle')}
       footer={
         <>
-          Já tem conta?{" "}
+          {t('register_has_account')}{" "}
           <Link to="/login" className="text-primary font-medium hover:underline">
-            Entrar
+            {t('register_login_link')}
           </Link>
         </>
       }
@@ -104,7 +106,7 @@ export default function Register() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="fullName">Nome</Label>
+          <Label htmlFor="fullName">{t('register_name')}</Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -112,7 +114,7 @@ export default function Register() {
               type="text"
               autoComplete="name"
               autoFocus
-              placeholder="Nome completo"
+              placeholder={t('register_name_placeholder')}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="pl-10 h-12"
@@ -128,7 +130,7 @@ export default function Register() {
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="email@exemplo.pt"
+              placeholder={t('auth_email_placeholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="pl-10 h-12"
@@ -137,7 +139,7 @@ export default function Register() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Palavra-passe</Label>
+          <Label htmlFor="password">{t('login_password')}</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -153,7 +155,7 @@ export default function Register() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="confirm">Confirmar palavra-passe</Label>
+          <Label htmlFor="confirm">{t('register_confirm_password')}</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -172,10 +174,10 @@ export default function Register() {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              A criar conta...
+              {t('register_loading')}
             </>
           ) : (
-            "Criar conta"
+            t('register_submit')
           )}
         </Button>
       </form>

@@ -6,16 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
+import { useI18n } from "@/lib/i18n";
 
 export default function Login() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
     setLoading(true);
     try {
@@ -23,7 +25,7 @@ export default function Login() {
       if (loginError) throw loginError;
       navigate("/");
     } catch (err) {
-      setError(err.message || "Email ou palavra-passe inválidos");
+      setError(err.message || t('login_invalid'));
     } finally {
       setLoading(false);
     }
@@ -33,12 +35,12 @@ export default function Login() {
     <AuthLayout
       icon={LogIn}
       title={null}
-      subtitle="Sistema interno de gestão de stock"
+      subtitle={t('auth_subtitle')}
       footer={
         <>
-          Não tem conta?{" "}
+          {t('login_no_account')}{" "}
           <Link to="/register" className="text-primary font-medium hover:underline">
-            Registar
+            {t('login_register_link')}
           </Link>
         </>
       }
@@ -59,7 +61,7 @@ export default function Login() {
               type="email"
               autoComplete="email"
               autoFocus
-              placeholder="email@exemplo.pt"
+              placeholder={t('auth_email_placeholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="pl-10 h-12"
@@ -69,9 +71,9 @@ export default function Login() {
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Palavra-passe</Label>
+            <Label htmlFor="password">{t('login_password')}</Label>
             <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-              Esqueceu a palavra-passe?
+              {t('login_forgot_password')}
             </Link>
           </div>
           <div className="relative">
@@ -92,10 +94,10 @@ export default function Login() {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              A entrar...
+              {t('login_loading')}
             </>
           ) : (
-            "Entrar"
+            t('login_submit')
           )}
         </Button>
       </form>
