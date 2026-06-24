@@ -96,13 +96,13 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button size="sm" className="h-8 text-xs" onClick={() => navigate('/equipamentos?action=new', { state: { from: 'dashboard' } })}>
+          <Button size="sm" className="h-8 text-xs" onClick={() => navigate('/equipamentos?action=new', { state: { from: 'dashboard' }, viewTransition: true })}>
             <Plus className="w-3.5 h-3.5 mr-1" />{t('btn_equipamento')}
           </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => navigate('/consumiveis?action=new', { state: { from: 'dashboard' } })}>
+          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => navigate('/consumiveis?action=new', { state: { from: 'dashboard' }, viewTransition: true })}>
             <Plus className="w-3.5 h-3.5 mr-1" />{t('btn_consumivel')}
           </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => navigate('/pecas?action=new', { state: { from: 'dashboard' } })}>
+          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => navigate('/pecas?action=new', { state: { from: 'dashboard' }, viewTransition: true })}>
             <Plus className="w-3.5 h-3.5 mr-1" />{t('btn_peca')}
           </Button>
         </div>
@@ -135,7 +135,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-[13px] font-semibold">{t('ultimos_movimentos')}</CardTitle>
               <Button asChild variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground">
-                <Link to="/movimentos">{t('ver_todos')}</Link>
+                <Link to="/movimentos" viewTransition>{t('ver_todos')}</Link>
               </Button>
             </div>
           </CardHeader>

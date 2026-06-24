@@ -32,7 +32,7 @@ export default function ForgotPassword() {
       title="Recuperar palavra-passe"
       subtitle="Enviaremos um link para redefinir"
       footer={
-        <Link to="/login" className="text-primary font-medium hover:underline">
+        <Link to="/login" viewTransition className="text-primary font-medium hover:underline">
           <ArrowLeft className="w-3 h-3 inline mr-1" />Voltar ao login
         </Link>
       }

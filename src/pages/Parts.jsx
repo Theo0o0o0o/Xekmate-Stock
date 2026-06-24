@@ -75,7 +75,7 @@ export default function Parts() {
     setShowForm(false);
     setEditingItem(null);
     setSearchParams({});
-    if (location.state?.from === 'dashboard') navigate('/');
+    if (location.state?.from === 'dashboard') navigate('/', { viewTransition: true });
   };
 
   if (showForm || editingItem) {

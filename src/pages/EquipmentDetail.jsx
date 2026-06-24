@@ -31,7 +31,7 @@ export default function EquipmentDetail() {
   });
 
   if (isLoading) return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64 rounded-xl" /></div>;
-  if (!eq) return <div className="text-center py-16"><p className="text-muted-foreground">{t('equipment_not_found')}</p><Button asChild variant="outline" className="mt-4"><Link to="/equipamentos">{t('common_back')}</Link></Button></div>;
+  if (!eq) return <div className="text-center py-16"><p className="text-muted-foreground">{t('equipment_not_found')}</p><Button asChild variant="outline" className="mt-4"><Link to="/equipamentos" viewTransition>{t('common_back')}</Link></Button></div>;
 
   const InfoRow = ({ icon: Icon, label, value }) => value ? (
     <div className="flex items-start gap-3 py-2">
@@ -50,7 +50,7 @@ export default function EquipmentDetail() {
         description={`${eq.brand} · ${translateValue(t, eq.category)}`}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/equipamentos')}><ArrowLeft className="w-4 h-4 mr-1" />{t('common_back')}</Button>
+            <Button variant="outline" onClick={() => navigate('/equipamentos', { viewTransition: true })}><ArrowLeft className="w-4 h-4 mr-1" />{t('common_back')}</Button>
           </div>
         }
       />

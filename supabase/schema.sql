@@ -1,3 +1,13 @@
+-- XEKmate Stock - Supabase schema
+-- Execute this full file in Supabase SQL Editor to create a new database from zero.
+-- After this, configure Auth URL settings in Supabase and set the frontend env vars:
+-- VITE_SUPABASE_URL
+-- VITE_SUPABASE_PUBLISHABLE_KEY
+--
+-- Default access password before login/register: xstock
+-- Stored below as SHA-256:
+-- 519ad8418de4f18d6ebfbb02b525bb3cc3a35dede6018aeb7882ffe065fe6b5e
+
 create extension if not exists pgcrypto;
 
 create or replace function public.touch_updated_at()
@@ -114,11 +124,47 @@ create table if not exists public.stock_movements (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.app_settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+
 do $$
 begin
+  if not exists (select 1 from pg_constraint where conname = 'profiles_role_valid') then
+    alter table public.profiles
+      add constraint profiles_role_valid check (role in ('admin', 'employee'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'equipment_name_not_blank') then
+    alter table public.equipment
+      add constraint equipment_name_not_blank check (btrim(name) <> '');
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'equipment_brand_not_blank') then
+    alter table public.equipment
+      add constraint equipment_brand_not_blank check (btrim(brand) <> '');
+  end if;
+
   if not exists (select 1 from pg_constraint where conname = 'equipment_serial_number_not_blank') then
     alter table public.equipment
       add constraint equipment_serial_number_not_blank check (btrim(serial_number) <> '');
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'equipment_category_not_blank') then
+    alter table public.equipment
+      add constraint equipment_category_not_blank check (btrim(category) <> '');
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'consumables_name_not_blank') then
+    alter table public.consumables
+      add constraint consumables_name_not_blank check (btrim(name) <> '');
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'consumables_reference_code_not_blank') then
+    alter table public.consumables
+      add constraint consumables_reference_code_not_blank check (btrim(reference_code) <> '');
   end if;
 
   if not exists (select 1 from pg_constraint where conname = 'consumables_quantity_nonnegative') then
@@ -131,6 +177,16 @@ begin
       add constraint consumables_minimum_stock_nonnegative check (minimum_stock >= 0);
   end if;
 
+  if not exists (select 1 from pg_constraint where conname = 'parts_name_not_blank') then
+    alter table public.parts
+      add constraint parts_name_not_blank check (btrim(name) <> '');
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'parts_reference_code_not_blank') then
+    alter table public.parts
+      add constraint parts_reference_code_not_blank check (btrim(reference_code) <> '');
+  end if;
+
   if not exists (select 1 from pg_constraint where conname = 'parts_quantity_nonnegative') then
     alter table public.parts
       add constraint parts_quantity_nonnegative check (quantity >= 0);
@@ -139,6 +195,36 @@ begin
   if not exists (select 1 from pg_constraint where conname = 'parts_minimum_stock_nonnegative') then
     alter table public.parts
       add constraint parts_minimum_stock_nonnegative check (minimum_stock >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'locations_name_not_blank') then
+    alter table public.locations
+      add constraint locations_name_not_blank check (btrim(name) <> '');
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'locations_type_not_blank') then
+    alter table public.locations
+      add constraint locations_type_not_blank check (btrim(type) <> '');
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'suppliers_name_not_blank') then
+    alter table public.suppliers
+      add constraint suppliers_name_not_blank check (btrim(name) <> '');
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'stock_movements_item_type_not_blank') then
+    alter table public.stock_movements
+      add constraint stock_movements_item_type_not_blank check (btrim(item_type) <> '');
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'stock_movements_item_name_not_blank') then
+    alter table public.stock_movements
+      add constraint stock_movements_item_name_not_blank check (btrim(item_name) <> '');
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'stock_movements_movement_type_not_blank') then
+    alter table public.stock_movements
+      add constraint stock_movements_movement_type_not_blank check (btrim(movement_type) <> '');
   end if;
 
   if not exists (select 1 from pg_constraint where conname = 'stock_movements_previous_quantity_nonnegative') then
@@ -154,7 +240,18 @@ end;
 $$;
 
 create unique index if not exists equipment_serial_number_unique_idx
-on public.equipment (lower(serial_number));
+on public.equipment (lower(btrim(serial_number)));
+
+create index if not exists equipment_created_at_idx on public.equipment (created_at desc);
+create index if not exists consumables_created_at_idx on public.consumables (created_at desc);
+create index if not exists parts_created_at_idx on public.parts (created_at desc);
+create index if not exists stock_movements_created_at_idx on public.stock_movements (created_at desc);
+create index if not exists stock_movements_item_id_idx on public.stock_movements (item_id);
+create index if not exists stock_movements_user_id_idx on public.stock_movements (user_id);
+
+insert into public.app_settings (key, value)
+values ('access_password_hash', '519ad8418de4f18d6ebfbb02b525bb3cc3a35dede6018aeb7882ffe065fe6b5e')
+on conflict (key) do nothing;
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -188,34 +285,6 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
 
-do $$
-declare
-  table_name text;
-begin
-  foreach table_name in array array[
-    'profiles',
-    'equipment',
-    'consumables',
-    'parts',
-    'locations',
-    'suppliers',
-    'stock_movements'
-  ] loop
-    execute format('alter table public.%I enable row level security', table_name);
-
-    execute format('drop policy if exists authenticated_read_all on public.%I', table_name);
-    execute format('drop policy if exists authenticated_insert_all on public.%I', table_name);
-    execute format('drop policy if exists authenticated_update_all on public.%I', table_name);
-    execute format('drop policy if exists authenticated_delete_all on public.%I', table_name);
-
-    execute format('create policy authenticated_read_all on public.%I for select to authenticated using (true)', table_name);
-    execute format('create policy authenticated_insert_all on public.%I for insert to authenticated with check (true)', table_name);
-    execute format('create policy authenticated_update_all on public.%I for update to authenticated using (true) with check (true)', table_name);
-    execute format('create policy authenticated_delete_all on public.%I for delete to authenticated using (true)', table_name);
-  end loop;
-end;
-$$;
-
 drop trigger if exists profiles_touch_updated_at on public.profiles;
 create trigger profiles_touch_updated_at before update on public.profiles
 for each row execute function public.touch_updated_at();
@@ -243,17 +312,45 @@ for each row execute function public.touch_updated_at();
 drop trigger if exists stock_movements_touch_updated_at on public.stock_movements;
 create trigger stock_movements_touch_updated_at before update on public.stock_movements
 for each row execute function public.touch_updated_at();
-create table if not exists public.app_settings (
-  key text primary key,
-  value text not null,
-  updated_at timestamptz not null default now()
-);
 
-insert into public.app_settings (key, value)
-values ('access_password_hash', '519ad8418de4f18d6ebfbb02b525bb3cc3a35dede6018aeb7882ffe065fe6b5e')
-on conflict (key) do nothing;
+drop trigger if exists app_settings_touch_updated_at on public.app_settings;
+create trigger app_settings_touch_updated_at before update on public.app_settings
+for each row execute function public.touch_updated_at();
 
+alter table public.profiles enable row level security;
+alter table public.equipment enable row level security;
+alter table public.consumables enable row level security;
+alter table public.parts enable row level security;
+alter table public.locations enable row level security;
+alter table public.suppliers enable row level security;
+alter table public.stock_movements enable row level security;
 alter table public.app_settings enable row level security;
+
+do $$
+declare
+  table_name text;
+begin
+  foreach table_name in array array[
+    'profiles',
+    'equipment',
+    'consumables',
+    'parts',
+    'locations',
+    'suppliers',
+    'stock_movements'
+  ] loop
+    execute format('drop policy if exists authenticated_read_all on public.%I', table_name);
+    execute format('drop policy if exists authenticated_insert_all on public.%I', table_name);
+    execute format('drop policy if exists authenticated_update_all on public.%I', table_name);
+    execute format('drop policy if exists authenticated_delete_all on public.%I', table_name);
+
+    execute format('create policy authenticated_read_all on public.%I for select to authenticated using (true)', table_name);
+    execute format('create policy authenticated_insert_all on public.%I for insert to authenticated with check (true)', table_name);
+    execute format('create policy authenticated_update_all on public.%I for update to authenticated using (true) with check (true)', table_name);
+    execute format('create policy authenticated_delete_all on public.%I for delete to authenticated using (true)', table_name);
+  end loop;
+end;
+$$;
 
 drop policy if exists app_settings_read_access_password on public.app_settings;
 drop policy if exists app_settings_manage_authenticated on public.app_settings;
@@ -270,7 +367,3 @@ for all
 to authenticated
 using (true)
 with check (true);
-
-drop trigger if exists app_settings_touch_updated_at on public.app_settings;
-create trigger app_settings_touch_updated_at before update on public.app_settings
-for each row execute function public.touch_updated_at();

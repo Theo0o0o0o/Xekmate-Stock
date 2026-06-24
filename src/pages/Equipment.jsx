@@ -93,7 +93,7 @@ export default function Equipment() {
     setShowForm(false);
     setEditingItem(null);
     setSearchParams({});
-    if (location.state?.from === 'dashboard') navigate('/');
+    if (location.state?.from === 'dashboard') navigate('/', { viewTransition: true });
   };
 
   if (showForm || editingItem) {
@@ -181,7 +181,7 @@ export default function Equipment() {
                     <TableCell className="text-right py-2.5">
                       <div className="flex items-center justify-end gap-0.5">
                         <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
-                          <Link to={`/equipamentos/${eq.id}`}><Eye className="w-3.5 h-3.5" /></Link>
+                          <Link to={`/equipamentos/${eq.id}`} viewTransition><Eye className="w-3.5 h-3.5" /></Link>
                         </Button>
                         {isAdmin && (
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => setEditingItem(eq)}>
