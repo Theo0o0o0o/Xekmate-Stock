@@ -126,8 +126,9 @@
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 220ms;
+  animation-duration: 280ms;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
   mix-blend-mode: normal;
 }
 
@@ -142,18 +143,22 @@
 @keyframes xk-page-fade-out {
   from {
     opacity: 1;
+    transform: translateY(0);
   }
   to {
     opacity: 0;
+    transform: translateY(-3px);
   }
 }
 
 @keyframes xk-page-fade-in {
   from {
     opacity: 0;
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 

@@ -1,8 +1,10 @@
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as SonnerToaster } from "sonner"
+import { useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { I18nProvider } from '@/lib/i18n';
@@ -28,6 +30,36 @@ import Suppliers from '@/pages/Suppliers';
 import UsersPage from '@/pages/Users';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
+
+const getRouteKey = (location) => `${location.pathname}${location.search}${location.hash}`;
+
+const canUseViewTransitions = () => (
+  typeof document !== 'undefined' &&
+  typeof document.startViewTransition === 'function' &&
+  !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+);
+
+const ViewTransitionRoutes = ({ children }) => {
+  const location = useLocation();
+  const [displayLocation, setDisplayLocation] = useState(location);
+
+  useEffect(() => {
+    if (getRouteKey(location) === getRouteKey(displayLocation)) return;
+
+    if (!canUseViewTransitions()) {
+      setDisplayLocation(location);
+      return;
+    }
+
+    const transition = document.startViewTransition(() => {
+      flushSync(() => setDisplayLocation(location));
+    });
+
+    transition.finished.catch(() => {});
+  }, [displayLocation, location]);
+
+  return <Routes location={displayLocation}>{children}</Routes>;
+};
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,7 +89,7 @@ const AuthenticatedApp = () => {
   }
 
   return (
-    <Routes>
+    <ViewTransitionRoutes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -80,7 +112,7 @@ const AuthenticatedApp = () => {
       </Route>
 
       <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    </ViewTransitionRoutes>
   );
 };
 
