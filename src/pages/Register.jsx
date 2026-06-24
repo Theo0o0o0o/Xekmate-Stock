@@ -49,7 +49,7 @@ export default function Register() {
 
       if (data.session && data.user) {
         await userService.ensureProfile(data.user);
-        navigate("/", { viewTransition: true });
+        navigate("/");
         return;
       }
 
@@ -72,7 +72,7 @@ export default function Register() {
         title={t('register_email_verify_title')}
         subtitle={null}
         footer={
-          <Link to="/login" viewTransition className="text-primary font-medium hover:underline">
+          <Link to="/login" className="text-primary font-medium hover:underline">
             {t('register_back_login')}
           </Link>
         }
@@ -92,7 +92,7 @@ export default function Register() {
       footer={
         <>
           {t('register_has_account')}{" "}
-          <Link to="/login" viewTransition className="text-primary font-medium hover:underline">
+          <Link to="/login" className="text-primary font-medium hover:underline">
             {t('register_login_link')}
           </Link>
         </>

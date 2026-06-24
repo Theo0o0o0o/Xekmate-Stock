@@ -1,10 +1,9 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 
 
 export default function PageNotFound({}) {
     const location = useLocation();
-    const navigate = useNavigate();
     const pageName = location.pathname.substring(1);
     const { user, authChecked } = useAuth();
     
@@ -41,7 +40,7 @@ export default function PageNotFound({}) {
                     )}
 <div className="pt-6">
                         <button 
-                            onClick={() => navigate('/', { viewTransition: true })} 
+                            onClick={() => window.location.href = '/'} 
                             className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                         >
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

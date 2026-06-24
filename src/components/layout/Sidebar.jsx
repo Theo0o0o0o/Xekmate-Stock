@@ -87,7 +87,6 @@ export default function Sidebar({ onLogout, mobileOpen, onCloseMobile, collapsed
                 <Link
                   key={item.path}
                   to={item.path}
-                  viewTransition
                   onClick={onCloseMobile}
                   title={collapsed ? t(item.labelKey) : undefined}
                   className={cn(

@@ -30,7 +30,7 @@ export default function ResetPassword() {
       const { error: resetError } = await supabase.auth.updateUser({ password: newPassword });
       if (resetError) throw resetError;
       setSuccess("Palavra-passe redefinida com sucesso.");
-      setTimeout(() => navigate("/login", { viewTransition: true }), 800);
+      setTimeout(() => navigate("/login"), 800);
     } catch (err) {
       setError(err.message || "Não foi possível redefinir a palavra-passe");
     } finally {
@@ -44,7 +44,7 @@ export default function ResetPassword() {
       title="Nova palavra-passe"
       subtitle="Introduza a sua nova palavra-passe"
       footer={
-        <Link to="/login" viewTransition className="text-primary font-medium hover:underline">
+        <Link to="/login" className="text-primary font-medium hover:underline">
           Voltar ao login
         </Link>
       }

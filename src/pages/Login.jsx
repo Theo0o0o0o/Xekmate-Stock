@@ -23,7 +23,7 @@ export default function Login() {
     try {
       const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
       if (loginError) throw loginError;
-      navigate("/", { viewTransition: true });
+      navigate("/");
     } catch (err) {
       setError(err.message || t('login_invalid'));
     } finally {
@@ -39,7 +39,7 @@ export default function Login() {
       footer={
         <>
           {t('login_no_account')}{" "}
-          <Link to="/register" viewTransition className="text-primary font-medium hover:underline">
+          <Link to="/register" className="text-primary font-medium hover:underline">
             {t('login_register_link')}
           </Link>
         </>
@@ -72,7 +72,7 @@ export default function Login() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">{t('login_password')}</Label>
-            <Link to="/forgot-password" viewTransition className="text-xs text-primary hover:underline">
+            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
               {t('login_forgot_password')}
             </Link>
           </div>
