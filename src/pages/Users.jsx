@@ -12,23 +12,25 @@ import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users as UsersIcon, Pencil, UserPlus, Shield, Trash2, History } from 'lucide-react';
+import { Users as UsersIcon, Pencil, UserPlus, Shield, UserX, History, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { userService } from '@/services/userService';
 import { stockMovementService } from '@/services/stockMovementService';
 import { format } from 'date-fns';
 import { pt, enUS } from 'date-fns/locale';
 import { useI18n } from '@/lib/i18n';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function UsersPage() {
   const { t, lang } = useI18n();
+  const { user: currentUser } = useAuth();
   const dateLocale = lang === 'en' ? enUS : pt;
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(null);
   const [showInvite, setShowInvite] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [deletingUser, setDeletingUser] = useState(null);
+  const [deactivatingUser, setDeactivatingUser] = useState(null);
   const [historyUser, setHistoryUser] = useState(null);
+  const registerUrl = `${window.location.origin}/register`;
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'], queryFn: () => userService.list('full_name', 200)
@@ -49,27 +51,25 @@ export default function UsersPage() {
     }
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => userService.delete(id),
+  const deactivateMutation = useMutation({
+    mutationFn: (id) => userService.deactivate(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success(t('users_removido'));
-      setDeletingUser(null);
+      toast.success(t('users_desativado'));
+      setDeactivatingUser(null);
     },
     onError: () => {
-      toast.error(t('users_erro_remover'));
-      setDeletingUser(null);
+      toast.error(t('users_erro_desativar'));
+      setDeactivatingUser(null);
     }
   });
 
-  const handleInvite = async () => {
-    if (!inviteEmail.trim()) { toast.error(t('users_email_obrigatorio')); return; }
+  const handleCopyRegistrationLink = async () => {
     try {
-      await userService.invite(inviteEmail, 'admin');
-      toast.success(t('users_convite_enviado') + inviteEmail);
-      setShowInvite(false); setInviteEmail('');
-    } catch (err) {
-      toast.error(err.message || 'Envie o link de registo ao utilizador.');
+      await navigator.clipboard.writeText(registerUrl);
+      toast.success(t('users_link_copiado'));
+    } catch {
+      toast.error(registerUrl);
     }
   };
 
@@ -131,9 +131,11 @@ export default function UsersPage() {
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" title={t('users_guardar')} onClick={() => setEditing(u)}>
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" title={t('users_eliminar_btn')} onClick={() => setDeletingUser(u)}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        {u.active !== false && u.id !== currentUser?.id && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" title={t('users_desativar_btn')} onClick={() => setDeactivatingUser(u)}>
+                            <UserX className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -154,7 +156,7 @@ export default function UsersPage() {
               </div>
               <div className="flex items-center justify-between py-1">
                 <Label className="text-[12px]">{t('users_conta_ativa')}</Label>
-                <Switch checked={editing.active !== false} onCheckedChange={v => setEditing(e => ({ ...e, active: v }))} />
+                <Switch checked={editing.active !== false} disabled={editing.id === currentUser?.id} onCheckedChange={v => setEditing(e => ({ ...e, active: v }))} />
               </div>
             </div>
           )}
@@ -209,27 +211,29 @@ export default function UsersPage() {
           <DialogHeader><DialogTitle className="text-base">{t('users_convidar_title')}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label className="text-[12px]">{t('users_email_label')}</Label>
-              <Input className="h-8 text-sm" type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder={t('users_email_placeholder')} />
+              <Label className="text-[12px]">{t('users_link_label')}</Label>
+              <Input className="h-8 text-sm" value={registerUrl} readOnly />
             </div>
             <p className="text-[11px] text-muted-foreground">
-              {lang === 'en' ? 'Users are invited as Administrators.' : 'Os utilizadores são convidados como Administradores.'}
+              {t('users_link_desc')}
             </p>
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowInvite(false)}>{t('users_cancelar')}</Button>
-            <Button size="sm" onClick={handleInvite}>{t('users_enviar_convite')}</Button>
+            <Button size="sm" onClick={handleCopyRegistrationLink}>
+              <Copy className="w-3.5 h-3.5 mr-1" />{t('users_copy_link')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 <ConfirmDialog
-        open={!!deletingUser}
-        onOpenChange={() => setDeletingUser(null)}
-        title={t('users_eliminar_title')}
-        description={`${t('users_eliminar_desc')} "${deletingUser?.full_name || deletingUser?.email}"? ${t('users_eliminar_desc2')}`}
-        confirmLabel={t('users_eliminar_btn')}
+        open={!!deactivatingUser}
+        onOpenChange={() => setDeactivatingUser(null)}
+        title={t('users_desativar_title')}
+        description={`${t('users_desativar_desc')} "${deactivatingUser?.full_name || deactivatingUser?.email}"? ${t('users_desativar_desc2')}`}
+        confirmLabel={t('users_desativar_btn')}
         destructive
-        onConfirm={() => deleteMutation.mutate(deletingUser.id)}
+        onConfirm={() => deactivateMutation.mutate(deactivatingUser.id)}
       />
     </div>
   );

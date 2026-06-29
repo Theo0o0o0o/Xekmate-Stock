@@ -21,6 +21,8 @@ Essa senha existe para impedir que pessoas de fora cheguem nas telas de login e 
 
 Todos os utilizadores têm as mesmas permissoes no sistema.
 
+Na pagina `Utilizadores`, o botao de adicionar utilizador mostra um link de registo para copiar e enviar manualmente. O sistema nao envia convite por email automaticamente.
+
 ## 3. Testes recomendados
 
 - Criar uma localizacao.
@@ -30,6 +32,7 @@ Todos os utilizadores têm as mesmas permissoes no sistema.
 - Registar movimento de stock.
 - Recarregar a pagina e confirmar que os dados continuam aparecendo.
 - Abrir `Relatorios` e testar exportacao.
+- Abrir `Utilizadores` e confirmar que e possivel ativar/desativar contas de teste.
 
 ## 4. Alterar senha de acesso
 

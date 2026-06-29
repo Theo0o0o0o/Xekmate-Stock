@@ -130,6 +130,23 @@ create table if not exists public.app_settings (
   updated_at timestamptz not null default now()
 );
 
+create or replace function public.current_user_is_active()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where id = auth.uid()
+      and active is true
+  );
+$$;
+
+grant execute on function public.current_user_is_active() to authenticated;
+
 do $$
 begin
   if not exists (select 1 from pg_constraint where conname = 'profiles_role_valid') then
@@ -326,12 +343,38 @@ alter table public.suppliers enable row level security;
 alter table public.stock_movements enable row level security;
 alter table public.app_settings enable row level security;
 
+drop policy if exists authenticated_read_all on public.profiles;
+drop policy if exists authenticated_insert_all on public.profiles;
+drop policy if exists authenticated_update_all on public.profiles;
+drop policy if exists authenticated_delete_all on public.profiles;
+drop policy if exists profiles_read_self_or_active_user on public.profiles;
+drop policy if exists profiles_insert_own on public.profiles;
+drop policy if exists profiles_update_active_users on public.profiles;
+
+create policy profiles_read_self_or_active_user
+on public.profiles
+for select
+to authenticated
+using (id = auth.uid() or public.current_user_is_active());
+
+create policy profiles_insert_own
+on public.profiles
+for insert
+to authenticated
+with check (id = auth.uid());
+
+create policy profiles_update_active_users
+on public.profiles
+for update
+to authenticated
+using (public.current_user_is_active())
+with check (public.current_user_is_active());
+
 do $$
 declare
   table_name text;
 begin
   foreach table_name in array array[
-    'profiles',
     'equipment',
     'consumables',
     'parts',
@@ -343,17 +386,22 @@ begin
     execute format('drop policy if exists authenticated_insert_all on public.%I', table_name);
     execute format('drop policy if exists authenticated_update_all on public.%I', table_name);
     execute format('drop policy if exists authenticated_delete_all on public.%I', table_name);
+    execute format('drop policy if exists active_users_read_all on public.%I', table_name);
+    execute format('drop policy if exists active_users_insert_all on public.%I', table_name);
+    execute format('drop policy if exists active_users_update_all on public.%I', table_name);
+    execute format('drop policy if exists active_users_delete_all on public.%I', table_name);
 
-    execute format('create policy authenticated_read_all on public.%I for select to authenticated using (true)', table_name);
-    execute format('create policy authenticated_insert_all on public.%I for insert to authenticated with check (true)', table_name);
-    execute format('create policy authenticated_update_all on public.%I for update to authenticated using (true) with check (true)', table_name);
-    execute format('create policy authenticated_delete_all on public.%I for delete to authenticated using (true)', table_name);
+    execute format('create policy active_users_read_all on public.%I for select to authenticated using (public.current_user_is_active())', table_name);
+    execute format('create policy active_users_insert_all on public.%I for insert to authenticated with check (public.current_user_is_active())', table_name);
+    execute format('create policy active_users_update_all on public.%I for update to authenticated using (public.current_user_is_active()) with check (public.current_user_is_active())', table_name);
+    execute format('create policy active_users_delete_all on public.%I for delete to authenticated using (public.current_user_is_active())', table_name);
   end loop;
 end;
 $$;
 
 drop policy if exists app_settings_read_access_password on public.app_settings;
 drop policy if exists app_settings_manage_authenticated on public.app_settings;
+drop policy if exists app_settings_manage_active_users on public.app_settings;
 
 create policy app_settings_read_access_password
 on public.app_settings
@@ -361,9 +409,9 @@ for select
 to anon, authenticated
 using (key = 'access_password_hash');
 
-create policy app_settings_manage_authenticated
+create policy app_settings_manage_active_users
 on public.app_settings
 for all
 to authenticated
-using (true)
-with check (true);
+using (public.current_user_is_active())
+with check (public.current_user_is_active());

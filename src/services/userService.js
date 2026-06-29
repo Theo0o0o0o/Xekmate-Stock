@@ -58,11 +58,14 @@ export const userService = {
   update: (id, data) =>
     userEntity.update(id, { ...data, role: 'admin' }),
 
+  deactivate: (id) =>
+    userEntity.update(id, { active: false, role: 'admin' }),
+
   delete: (id) =>
-    userEntity.delete(id),
+    userService.deactivate(id),
 
   invite: async () => {
-    throw new Error('Para adicionar utilizadores, envie o link de registo do sistema.');
+    throw new Error('Copie e envie manualmente o link de registo do sistema.');
   },
 
   ensureProfile,
