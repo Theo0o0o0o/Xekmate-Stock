@@ -4,6 +4,16 @@ Aplicacao React/Vite para gestao de stock de equipamentos, consumiveis, pecas, l
 
 Esta versao local ja nao depende do Base44 no frontend. A autenticacao e a base de dados usam Supabase.
 
+## Documento de passagem
+
+O documento tecnico completo para a equipa de TI esta em:
+
+```text
+LOG_TECNICO_XEKMATE_STOCK.md
+```
+
+Esse ficheiro explica o contexto do projeto, estrutura, Supabase, RLS, utilizadores, deploy, comandos, cuidados antes de producao e como criar a base de dados do zero.
+
 ## Requisitos
 
 - Node.js instalado
